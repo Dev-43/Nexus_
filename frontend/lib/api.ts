@@ -6,8 +6,6 @@
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
-// ─── Shared types (mirror NexusState) ────────────────────────────────────────
-
 export type SkillLevel = "beginner" | "intermediate" | "advanced";
 
 export interface Resource {
@@ -44,7 +42,7 @@ export interface Question {
 }
 
 export interface QuizResult {
-  skill_score: number;        // 0.0 – 1.0
+  skill_score: number;
   skill_level: SkillLevel;
   total_questions: number;
   correct_answers: number;
@@ -79,7 +77,7 @@ export interface GateTestAnswer {
 }
 
 export interface GateTestResult {
-  score: number;             // 0–100
+  score: number;
   passed: boolean;
   partial_credit: boolean;
   fail_count: number;
@@ -98,8 +96,6 @@ export interface SublevelResponse {
     lessons: { title: string; description: string }[];
   };
 }
-
-// ─── Mock data ────────────────────────────────────────────────────────────────
 
 const MOCK_LEVELS: Level[] = [
   {
@@ -190,147 +186,59 @@ const MOCK_SESSION: SessionStartResponse = {
   skill_level: "beginner",
 };
 
-// ─── API functions ────────────────────────────────────────────────────────────
-
-/**
- * POST /session/start
- * Starts a new learning session. Pass skill_level + skip_assessment for
- * the progressive level-up flow (Beginner → Intermediate → Advanced).
- */
 export async function startSession(params: {
   skill_name: string;
   skill_level?: SkillLevel;
   skip_assessment?: boolean;
 }): Promise<SessionStartResponse> {
-  // Real call (swap in when backend is live):
-  // const res = await fetch(`${BACKEND_URL}/session/start`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify(params),
-  // });
-  // return res.json();
-
   return { ...MOCK_SESSION, skill_name: params.skill_name, skill_level: params.skill_level ?? "beginner" };
 }
 
-/**
- * POST /quiz/personality/submit
- * Stores the personality profile. Pass { skipped: true } to skip.
- */
 export async function submitPersonalityQuiz(
   payload: { skipped: true } | { skipped: false; profile: PersonalityProfile }
 ): Promise<{ success: boolean; personality_profile: PersonalityProfile | null }> {
-  // Real call:
-  // const res = await fetch(`${BACKEND_URL}/quiz/personality/submit`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify(payload),
-  // });
-  // return res.json();
-
   if (payload.skipped) return { success: true, personality_profile: null };
-  return {
-    success: true,
-    personality_profile: payload.profile,
-  };
+  return { success: true, personality_profile: payload.profile };
 }
 
-/**
- * GET /stream/assessment  (SSE)
- * Returns the EventSource URL to open. The caller uses this with useAssessmentStream.
- * Not a fetch — just returns the URL so the hook can open EventSource(url).
- */
 export function getAssessmentStreamUrl(session_id: string): string {
   return `${BACKEND_URL}/stream/assessment?session_id=${session_id}`;
 }
 
-/**
- * POST /quiz/assessment/submit
- * Submits one assessment answer and returns the next question or a final result.
- */
 export async function submitAssessmentAnswer(params: {
   session_id: string;
   question_id: string;
   answer: string;
 }): Promise<{ next_question: Question | null; result: QuizResult | null }> {
-  // Real call:
-  // const res = await fetch(`${BACKEND_URL}/quiz/assessment/submit`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify(params),
-  // });
-  // return res.json();
-
-  // Mock: return a next question for the first 2 calls, then a final result
-  const mockNextQuestion = MOCK_QUESTIONS[1] ?? null;
   const isLastQuestion = params.question_id === "q3";
-
   if (isLastQuestion) {
     return {
       next_question: null,
       result: { skill_score: 0.6, skill_level: "beginner", total_questions: 3, correct_answers: 2 },
     };
   }
-  return { next_question: mockNextQuestion, result: null };
+  return { next_question: MOCK_QUESTIONS[1] ?? null, result: null };
 }
 
-/**
- * GET /stream/roadmap  (SSE)
- * Returns the EventSource URL. Caller opens EventSource(url).
- */
 export function getRoadmapStreamUrl(session_id: string): string {
   return `${BACKEND_URL}/stream/roadmap?session_id=${session_id}`;
 }
 
-/**
- * GET /roadmap/:id
- * Fetches the full structured roadmap JSON after the stream completes.
- */
 export async function getRoadmap(roadmap_id: string): Promise<Roadmap> {
-  // Real call:
-  // const res = await fetch(`${BACKEND_URL}/roadmap/${roadmap_id}`);
-  // return res.json();
-
   return { ...MOCK_ROADMAP, id: roadmap_id };
 }
 
-/**
- * POST /roadmap/:id/regenerate
- * Submits user feedback and triggers a new roadmap stream.
- * Returns 202 Accepted — caller should re-open the SSE stream URL after this.
- */
 export async function regenerateRoadmap(
   roadmap_id: string,
   feedback: string
 ): Promise<{ accepted: boolean; regeneration_count: number }> {
-  // Real call:
-  // const res = await fetch(`${BACKEND_URL}/roadmap/${roadmap_id}/regenerate`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify({ feedback }),
-  // });
-  // return res.json();
-
   return { accepted: true, regeneration_count: 1 };
 }
 
-/**
- * POST /level/:id/submit
- * Submits all gate test answers for a level.
- */
 export async function submitGateTest(params: {
   level_id: string;
   answers: GateTestAnswer[];
 }): Promise<GateTestResult> {
-  // Real call:
-  // const res = await fetch(`${BACKEND_URL}/level/${params.level_id}/submit`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify({ answers: params.answers }),
-  // });
-  // return res.json();
-
-  // Mock: always return a fail so the sublevel flow can be demoed
   return {
     score: 55,
     passed: false,
@@ -340,21 +248,9 @@ export async function submitGateTest(params: {
   };
 }
 
-/**
- * POST /sublevel/decision
- * Sends the user's decision after a gate test failure.
- */
 export async function submitSublevelDecision(
   decision: SublevelDecision
 ): Promise<SublevelResponse> {
-  // Real call:
-  // const res = await fetch(`${BACKEND_URL}/sublevel/decision`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify(decision),
-  // });
-  // return res.json();
-
   if (decision.decision === "accept") {
     return {
       sublevel_reject_count: 0,
@@ -369,18 +265,9 @@ export async function submitSublevelDecision(
       },
     };
   }
-
   return { sublevel_reject_count: 1, next_action: "gate_test_retry" };
 }
 
-/**
- * GET /user/stats
- * Returns points, badges, and streak for the current user.
- */
 export async function getUserStats(): Promise<UserStats> {
-  // Real call:
-  // const res = await fetch(`${BACKEND_URL}/user/stats`);
-  // return res.json();
-
   return MOCK_USER_STATS;
 }

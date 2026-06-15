@@ -40,3 +40,4 @@ frontend/next-env.d.ts
 feature4_bootstrap_pnpm.sh
 feature4_fix_route_conflict.sh
 feature4_fix_supabase_ssr.sh
+feature6_install.sh
