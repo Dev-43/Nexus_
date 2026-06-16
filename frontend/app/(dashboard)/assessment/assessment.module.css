@@ -1,0 +1,61 @@
+.page button:focus-visible {
+  outline: 2px solid #7b6ef6;
+  outline-offset: 3px;
+}
+
+.title {
+  font-size: 24px;
+}
+
+.questionCard {
+  padding: 32px;
+}
+
+@keyframes assessmentSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes assessmentFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes assessmentPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.7;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page * {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 20px !important;
+  }
+
+  .questionCard {
+    padding: 20px;
+  }
+}

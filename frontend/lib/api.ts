@@ -220,19 +220,18 @@ export async function submitAssessmentAnswer(params: {
   return { next_question: MOCK_QUESTIONS[1] ?? null, result: null };
 }
 
-export function getRoadmapStreamUrl(session_id: string): string {
-  return `${BACKEND_URL}/stream/roadmap?session_id=${session_id}`;
+export function getRoadmapStreamUrl(roadmapId: string): string {
+  return `${BACKEND_URL}/stream/roadmap?roadmap_id=${roadmapId}`;
 }
 
-export async function getRoadmap(roadmap_id: string): Promise<Roadmap> {
-  return { ...MOCK_ROADMAP, id: roadmap_id };
+export async function getRoadmap(roadmapId: string): Promise<Roadmap> {
+  return { ...MOCK_ROADMAP, id: roadmapId };
 }
 
-export async function regenerateRoadmap(
-  roadmap_id: string,
-  feedback: string
-): Promise<{ accepted: boolean; regeneration_count: number }> {
-  return { accepted: true, regeneration_count: 1 };
+export async function regenerateRoadmap(id: string, feedback: string) {
+  // Mock for now — swap for real fetch on Day 5 integration sync
+  return { ok: true, regeneration_count: 1 };
+  // Real: return fetch(`/roadmap/${id}/regenerate`, { method: "POST", body: JSON.stringify({ feedback }) })
 }
 
 export async function submitGateTest(params: {
