@@ -136,19 +136,28 @@ html, body {
   margin-bottom: 1.5rem;
 }
 
+.regen-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
 .regen-trigger {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 13px;
   color: var(--color-text-secondary);
   background: none;
   border: 0.5px solid var(--color-border-secondary, rgba(0,0,0,0.2));
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 6px 10px;
   cursor: pointer;
   transition: background 0.15s;
-  width: 100%;
+  flex: 1;
+  white-space: nowrap;
 }
 
 .regen-trigger:hover {
@@ -156,9 +165,10 @@ html, body {
 }
 
 .regen-count {
-  margin-left: auto;
-  font-size: 11px;
-  color: var(--color-text-tertiary, #aaa);
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  flex-shrink: 0;
 }
 
 .regen-input-panel {
@@ -351,12 +361,26 @@ html, body {
 /* Misc */
 .btn-retry {
   margin-top: 1.5rem;
-  padding: 10px 20px;
+  padding: 12px 32px;
   border-radius: 8px;
-  border: 0.5px solid var(--color-border-secondary, rgba(0,0,0,0.2));
-  background: none;
+  border: none;
+  background: var(--color-brand);
+  color: #fff;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.btn-retry:hover {
+  background: #5652E0;
+  box-shadow: 0 4px 16px rgba(108, 99, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-retry:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(108, 99, 255, 0.2);
 }
 
 /* ── End Roadmap Overview Page ─────────────────────────────────── */
