@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import styles from "./assessment.module.css";
 
+
 import {
   AssessmentQuestion,
   Difficulty,
@@ -33,6 +34,7 @@ const tokens = {
   error: "#F87171",
   errorBg: "#F8717115",
 };
+
 
 function DifficultyPill({ difficulty }: { difficulty: Difficulty }) {
   const config: Record<Difficulty, { color: string; bg: string; label: string; bars: number }> = {
@@ -372,6 +374,11 @@ export default function AssessmentPage() {
   const [skillLevel, setSkillLevel] = useState<"beginner" | "intermediate" | "advanced">("beginner");
   const [showComplete, setShowComplete] = useState(false);
   const [prevDifficulty, setPrevDifficulty] = useState<Difficulty>("easy");
+  const [sessionId, setSessionId] = useState<string>("");
+  useEffect(() => {
+    const id = localStorage.getItem("nexus_session_id") ?? "";
+    setSessionId(id);
+  }, []);
 
   const handleComplete = useCallback(
     (score: number, level: "beginner" | "intermediate" | "advanced") => {
@@ -485,7 +492,7 @@ export default function AssessmentPage() {
           <CompleteState
             skillScore={skillScore}
             skillLevel={skillLevel}
-            onContinue={() => router.push("/roadmap/loading")}
+            onContinue={() => router.push(`/roadmap/${sessionId}`)}
           />
         )}
       </div>

@@ -18,7 +18,7 @@ export interface UseRoadmapStreamResult {
 }
 
 // ─── Flip to false on Day 5 integration sync ──────────────────────────────────
-const MOCK_MODE = true;
+const MOCK_MODE = false;
 
 const MOCK_THINKING_MESSAGES = [
   "Analysing your assessment results...",

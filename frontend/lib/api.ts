@@ -186,12 +186,25 @@ const MOCK_SESSION: SessionStartResponse = {
   skill_level: "beginner",
 };
 
-export async function startSession(params: {
+/*export async function startSession(params: {
   skill_name: string;
   skill_level?: SkillLevel;
   skip_assessment?: boolean;
 }): Promise<SessionStartResponse> {
   return { ...MOCK_SESSION, skill_name: params.skill_name, skill_level: params.skill_level ?? "beginner" };
+}*/
+export async function startSession(payload: {
+  skill_name: string;
+  skill_level?: string;
+  skip_assessment?: boolean;
+}) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/session/start`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error(`startSession failed: ${res.status}`);
+  return res.json();
 }
 
 export async function submitPersonalityQuiz(
@@ -267,6 +280,15 @@ export async function submitSublevelDecision(
   return { sublevel_reject_count: 1, next_action: "gate_test_retry" };
 }
 
+
 export async function getUserStats(): Promise<UserStats> {
-  return MOCK_USER_STATS;
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/stats`,
+    {
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',   // sends the Supabase session cookie
+    }
+  );
+  if (!res.ok) throw new Error(`GET /user/stats failed: ${res.status}`);
+  return res.json();
 }

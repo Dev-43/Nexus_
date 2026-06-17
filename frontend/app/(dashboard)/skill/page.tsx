@@ -65,34 +65,49 @@ export default function SkillSelectionPage() {
   }
 
   async function handleConfirm() {
-    if (totalSelected === 0) return;
-    setIsConfirming(true);
+  if (totalSelected === 0) return;
+  setIsConfirming(true);
 
+  const firstSkill =
+    selected.length > 0
+      ? PRESET_SKILLS.find((x) => x.id === selected[0])!.label
+      : customAdded[0];
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    // Keep the Supabase insert for all selected skills
     const allSkills = [
       ...selected.map((id) => PRESET_SKILLS.find((x) => x.id === id)!.label),
       ...customAdded,
     ];
+    const rows = allSkills.map((skill_name) => ({
+      user_id: user?.id ?? "anon",
+      skill_name,
+      status: "active",
+    }));
+    const { error } = await supabase.from("skill_sessions").insert(rows);
+    if (error) console.error("Supabase insert error:", error);
 
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const rows = allSkills.map((skill_name) => ({
-        user_id: user?.id ?? "anon",
-        skill_name,
-        status: "active",
-      }));
-      const { error } = await supabase.from("skill_sessions").insert(rows);
-      if (error) console.error("Supabase insert error:", error);
-    } catch (err) {
-      console.error("Failed to save skill selection:", err);
-    } finally {
-      router.push(`/assessment?skill=${encodeURIComponent(
-        selected.length > 0
-          ? PRESET_SKILLS.find((x) => x.id === selected[0])!.label
-          : customAdded[0]
-      )}`);
-      setIsConfirming(false);
-    }
+    // Call backend startSession for the PRIMARY skill and store the session_id
+    const session = await fetch(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/session/start`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ skill_name: firstSkill }),
+      }
+    ).then((r) => r.json());
+
+    localStorage.setItem("nexus_session_id", session.session_id);
+
+  } catch (err) {
+    console.error("Failed to save skill selection:", err);
+  } finally {
+    router.push(`/assessment?skill=${encodeURIComponent(firstSkill)}`);
+    setIsConfirming(false);
   }
+}
 
   return (
     <main className={s.page}>
