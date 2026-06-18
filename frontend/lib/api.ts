@@ -84,9 +84,7 @@ export interface GateTestResult {
   concept_gaps: string[];
 }
 
-export interface SublevelDecision {
-  decision: "accept" | "challenge" | "reassess" | "microlesson";
-}
+export type SublevelDecision = "accept" | "reject" | "challenge" | "reassess" | "microlesson";
 
 export interface SublevelResponse {
   sublevel_reject_count: number;
@@ -247,37 +245,19 @@ export async function regenerateRoadmap(id: string, feedback: string) {
   // Real: return fetch(`/roadmap/${id}/regenerate`, { method: "POST", body: JSON.stringify({ feedback }) })
 }
 
-export async function submitGateTest(params: {
-  level_id: string;
-  answers: GateTestAnswer[];
-}): Promise<GateTestResult> {
-  return {
-    score: 55,
-    passed: false,
-    partial_credit: false,
-    fail_count: 1,
-    concept_gaps: ["List comprehensions", "Dictionary methods"],
-  };
-}
-
+// Mock — returns immediately so SubLevelModal works without a live backend
 export async function submitSublevelDecision(
   decision: SublevelDecision
-): Promise<SublevelResponse> {
-  if (decision.decision === "accept") {
-    return {
-      sublevel_reject_count: 0,
-      next_action: "sublevel_content",
-      mini_roadmap: {
-        title: "Closing Your Gaps: Lists & Dicts",
-        lessons: [
-          { title: "List Comprehensions", description: "Write concise list transforms in one line." },
-          { title: "Dictionary Methods", description: "keys(), values(), items(), get(), and update()." },
-          { title: "Mini-project", description: "Refactor a script using comprehensions and dict methods." },
-        ],
-      },
-    };
-  }
-  return { sublevel_reject_count: 1, next_action: "gate_test_retry" };
+): Promise<{ success: boolean; next_action: string }> {
+  await new Promise((r) => setTimeout(r, 400)); // simulate network
+  const nextActionMap: Record<SublevelDecision, string> = {
+    accept: "sublevel_active",
+    reject: "gate_test_retry",
+    challenge: "challenge_mode",
+    reassess: "reassess",
+    microlesson: "microlesson",
+  };
+  return { success: true, next_action: nextActionMap[decision] };
 }
 
 
@@ -291,4 +271,33 @@ export async function getUserStats(): Promise<UserStats> {
   );
   if (!res.ok) throw new Error(`GET /user/stats failed: ${res.status}`);
   return res.json();
+}
+
+// ── Gate test ──────────────────────────────────────────────────────────────
+
+interface AnswerRecord {
+  question_id: string;
+  selected_index: number;
+  concept_tag?: string;
+}
+
+export async function submitGateTest(
+  levelId: string,
+  answers: AnswerRecord[]
+): Promise<{ score: number; passed: boolean; attempt_number: number }> {
+  // MOCK — swap the body for a real fetch() on Day 5 integration sync
+  const correct = answers.filter(
+    (a) => ({ q1: 1, q2: 2, q3: 1, q4: 1, q5: 2 } as Record<string, number>)[a.question_id] === a.selected_index
+  ).length;
+  const score = Math.round((correct / answers.length) * 100);
+  return { score, passed: score >= 70, attempt_number: 1 };
+
+  // Real call (uncomment on Day 5):
+  // const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/level/${levelId}/submit`, {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({ answers }),
+  // });
+  // if (!res.ok) throw new Error(`Gate test submit failed: ${res.status}`);
+  // return res.json();
 }
