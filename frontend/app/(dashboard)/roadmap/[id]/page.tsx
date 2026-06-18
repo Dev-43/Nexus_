@@ -1,271 +1,313 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import { RoadmapStream } from "@/components/features/RoadmapStream";
+import Card from "@/components/ui/Card";
+import ProgressBar from "@/components/ui/ProgressBar";
+import Button from "@/components/ui/Button";
 import { RoadmapRegenerate } from "@/components/features/RoadmapRegenerate";
+import CompletionOverlay from "@/components/features/CompletionOverlay";
+import { getRoadmap, getUserStats, startSession, type Roadmap as ApiRoadmap } from "@/lib/api";
 
-import { getRoadmap, getRoadmapStreamUrl } from "@/lib/api";
-import type { Roadmap, Level } from "@/lib/api";
-
-// ── Types ────────────────────────────────────────────────────────────────────
-
-type PagePhase = "streaming" | "ready" | "regenerating" | "error";
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
-function getLevelState(
-  level: Level,
-  index: number,
-  currentIndex: number
-): "completed" | "current" | "locked" {
-  if (index < currentIndex) return "completed";
-  if (index === currentIndex) return "current";
-  return "locked";
-}
-
-function completedCount(levels: Level[], currentIndex: number): number {
-  return Math.max(0, currentIndex);
-}
-
-// ── Sub-components ───────────────────────────────────────────────────────────
-
-function LevelStatusPill({
-  state,
-}: {
-  state: "completed" | "current" | "locked";
-}) {
-  const labels = {
-    completed: "Completed",
-    current: "Ready to start",
-    locked: "Locked",
-  };
-  return <span className={`level-status-pill level-status-pill--${state}`}>{labels[state]}</span>;
-}
-
-function LevelCard({
-  level,
-  index,
-  state,
-  onClick,
-}: {
-  level: Level;
+interface Level {
   index: number;
-  state: "completed" | "current" | "locked";
-  onClick: () => void;
-}) {
-  const isClickable = state !== "locked";
-  const lessonCount = level.resources?.length ?? 0;
-
-  return (
-    <div
-      className={`level-card level-card--${state}`}
-      onClick={isClickable ? onClick : undefined}
-      role={isClickable ? "button" : undefined}
-      tabIndex={isClickable ? 0 : undefined}
-      onKeyDown={
-        isClickable
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") onClick();
-            }
-          : undefined
-      }
-      aria-disabled={state === "locked"}
-      aria-label={
-        state === "locked"
-          ? `Level ${index + 1}: ${level.title} — locked`
-          : `Level ${index + 1}: ${level.title}`
-      }
-    >
-      <div className={`level-num level-num--${state}`}>
-        {state === "completed" ? (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        ) : (
-          <span>{index + 1}</span>
-        )}
-      </div>
-
-      <div className="level-body">
-        <p className="level-title">{level.title}</p>
-        {level.description && (
-          <p className="level-desc">{level.description}</p>
-        )}
-        <div className="level-meta">
-          <LevelStatusPill state={state} />
-          {lessonCount > 0 && (
-            <span className="level-lesson-count">
-              {lessonCount} lesson{lessonCount !== 1 ? "s" : ""}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {state === "locked" && (
-        <svg
-          className="level-lock"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-        </svg>
-      )}
-    </div>
-  );
+  title: string;
+  description: string;
+  locked: boolean;
+  completed: boolean;
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+interface Roadmap {
+  id: string;
+  skill_name: string;
+  skill_level: "beginner" | "intermediate" | "advanced";
+  total_levels: number;
+  roadmap_locked: boolean;
+  regeneration_count: number;
+  levels: Level[];
+}
+
+interface UserStats {
+  points: number;
+  badges: string[];
+  streak_days: number;
+}
+
+function getBadgeForLevel(skillLevel: string): string {
+  const map: Record<string, string> = {
+    beginner: "Bronze",
+    intermediate: "Silver",
+    advanced: "Gold",
+  };
+  return map[skillLevel] ?? "Bronze";
+}
+
+const LEVEL_COMPLETE_POINTS = 200;
 
 export default function RoadmapOverviewPage() {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
   const router = useRouter();
+  const roadmapId = params.id as string;
 
-  const [phase, setPhase] = useState<PagePhase>("streaming");
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
-  const [regenerationCount, setRegenerationCount] = useState(0);
-  const [roadmapLocked, setRoadmapLocked] = useState(false);
-  const [streamKey, setStreamKey] = useState(0); // bump to re-mount RoadmapStream
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showCompletion, setShowCompletion] = useState(false);
 
-  const handleStreamComplete = useCallback(async (roadmapId: string) => {
-    try {
-      const data = await getRoadmap(roadmapId || id);
-      setRoadmap(data);
-      setRegenerationCount((data.roadmap_version ?? 1) - 1); // version starts at 1
-      setRoadmapLocked(data.roadmap_locked ?? false);
-      setPhase("ready");
-    } catch {
-      setPhase("error");
+  // Trigger overlay via ?complete=true (set by GateTest on final level pass)
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("complete") === "true") setShowCompletion(true);
+  }, []);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const rm = await getRoadmap(roadmapId);
+        setRoadmap(toLocalRoadmap(rm));
+
+        try {
+          const stats = await getUserStats();
+          setUserStats(stats);
+        } catch (statsErr) {
+          console.warn("Failed to load user stats, using defaults:", statsErr);
+          setUserStats({ points: 0, badges: [], streak_days: 0 });
+        }
+      } catch (err) {
+        console.error("Failed to load roadmap:", err);
+      } finally {
+        setLoading(false);
+      }
     }
-  }, [id]);
+    load();
+  }, [roadmapId]);
 
-  const handleStreamError = useCallback((_message: string) => {
-    setPhase("error");
-  }, []);
+  function toLocalRoadmap(apiRoadmap: ApiRoadmap): Roadmap {
+    return {
+      ...apiRoadmap,
+      levels: apiRoadmap.levels.map((level, index) => ({
+        ...level,
+        completed: index < apiRoadmap.current_level_index,
+      })),
+    };
+  }
 
-  // Triggered by RoadmapRegenerate after backend confirms the regen
-  const handleRegenerate = useCallback(() => {
-    setPhase("regenerating");
-    setRoadmap(null);
-    // Small delay so the streaming UI unmounts cleanly before remounting
-    setTimeout(() => {
-      setStreamKey((k) => k + 1);
-      setPhase("streaming");
-    }, 150);
-  }, []);
-
-  const handleLevelClick = (levelIndex: number) => {
+  const handleLevelUp = async (nextLevel: string) => {
     if (!roadmap) return;
-    router.push(`/roadmap/${roadmap.id}/level/${levelIndex}`);
+    await startSession({
+      skill_name: roadmap.skill_name,
+      skill_level: nextLevel,
+      skip_assessment: true,
+    });
+    // CompletionOverlay handles the router.push("/loading")
   };
 
-  // ── Render: streaming / regenerating ───────────────────────────────────────
+  const completedCount = roadmap?.levels.filter((l) => l.completed).length ?? 0;
+  const totalCount = roadmap?.total_levels ?? 0;
+  const progressPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const badgeEarned = roadmap ? getBadgeForLevel(roadmap.skill_level) : "Bronze";
 
-  if (phase === "streaming" || phase === "regenerating") {
+  if (loading) {
     return (
-      <div className="roadmap-page">
-        <div className="roadmap-page__header">
-          <p className="roadmap-page__eyebrow">Building your roadmap</p>
-          <h1 className="roadmap-page__title">
-            {phase === "regenerating" ? "Rebuilding…" : "Generating…"}
-          </h1>
-        </div>
-        <RoadmapStream
-          key={streamKey}
-          streamUrl={getRoadmapStreamUrl(id)}
-          onComplete={handleStreamComplete}
-          onError={handleStreamError}
-        />
+      <div style={{ padding: "40px 24px", textAlign: "center", color: "var(--color-text-muted)" }}>
+        Loading roadmap…
       </div>
     );
   }
 
-  // ── Render: error ──────────────────────────────────────────────────────────
-
-  if (phase === "error" || !roadmap) {
+  if (!roadmap) {
     return (
-      <div className="roadmap-page roadmap-page--error">
-        <p className="roadmap-page__eyebrow">Something went wrong</p>
-        <h1 className="roadmap-page__title">Couldn't load your roadmap</h1>
-        <p className="roadmap-page__subtitle">
-          Try refreshing. If it keeps happening, regenerate from the previous screen.
-        </p>
-        <button className="btn-retry" onClick={() => router.push("/skill")}>
-          Start over
-        </button>
+      <div style={{ padding: "40px 24px", textAlign: "center", color: "var(--color-text-muted)" }}>
+        Roadmap not found.
       </div>
     );
   }
-
-  // ── Render: ready ──────────────────────────────────────────────────────────
-
-  const currentIndex = roadmap.current_level_index ?? 0;
-  const levels = roadmap.levels ?? [];
-  const completed = completedCount(levels, currentIndex);
-  const progressPct = levels.length > 0 ? Math.round((completed / levels.length) * 100) : 0;
 
   return (
-    <div className="roadmap-page">
-      {/* Header */}
-      <div className="roadmap-page__header">
-        <p className="roadmap-page__eyebrow">
-          {roadmap.skill_name} · {roadmap.skill_level}
-        </p>
-        <h1 className="roadmap-page__title">Your learning roadmap</h1>
-        <div className="roadmap-page__meta">
-          <span>{levels.length} levels</span>
-          <span aria-hidden="true">·</span>
-          <span className="roadmap-version-badge">v{roadmap.roadmap_version ?? 1}</span>
+    <>
+      <style>{`
+        .ro-page {
+          max-width: 720px;
+          margin: 0 auto;
+          padding: 40px 24px 80px;
+        }
+        .ro-header { margin-bottom: 32px; }
+        .ro-eyebrow {
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          color: var(--color-text-muted);
+          margin-bottom: 8px;
+        }
+        .ro-title {
+          font-size: 28px;
+          font-weight: 700;
+          color: var(--color-text);
+          margin-bottom: 4px;
+        }
+        .ro-level-tag {
+          display: inline-block;
+          font-size: 12px;
+          font-weight: 600;
+          text-transform: capitalize;
+          background: var(--color-surface-raised);
+          border: 1px solid var(--color-border);
+          border-radius: 100px;
+          padding: 3px 10px;
+          color: var(--color-text-muted);
+          margin-bottom: 20px;
+        }
+        .ro-progress-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 32px;
+        }
+        .ro-progress-label {
+          font-size: 12px;
+          color: var(--color-text-muted);
+          white-space: nowrap;
+          min-width: 80px;
+          text-align: right;
+        }
+        .ro-levels {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          margin-bottom: 32px;
+        }
+        .ro-level-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 20px;
+          border-radius: 14px;
+          border: 1px solid var(--color-border);
+          background: var(--color-surface);
+          transition: border-color 0.15s, transform 0.15s;
+          cursor: pointer;
+          text-decoration: none;
+        }
+        .ro-level-card:hover:not([aria-disabled="true"]) {
+          border-color: var(--color-primary);
+          transform: translateY(-1px);
+        }
+        .ro-level-card[aria-disabled="true"] {
+          opacity: 0.5;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
+        .ro-level-card.completed {
+          border-color: var(--color-success, #22c55e);
+          background: var(--color-success-surface, rgba(34,197,94,0.06));
+        }
+        .ro-level-num {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13px;
+          font-weight: 700;
+          flex-shrink: 0;
+          background: var(--color-surface-raised);
+          color: var(--color-text-muted);
+          border: 1px solid var(--color-border);
+        }
+        .ro-level-card.completed .ro-level-num {
+          background: var(--color-success, #22c55e);
+          color: #fff;
+          border-color: transparent;
+        }
+        .ro-level-info { flex: 1; min-width: 0; }
+        .ro-level-title {
+          font-size: 15px;
+          font-weight: 600;
+          color: var(--color-text);
+          margin-bottom: 2px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .ro-level-desc {
+          font-size: 13px;
+          color: var(--color-text-muted);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .ro-lock-icon { font-size: 16px; flex-shrink: 0; color: var(--color-text-muted); }
+        .ro-check-icon { font-size: 16px; flex-shrink: 0; color: var(--color-success, #22c55e); }
+        .ro-regen-section { margin-top: 8px; }
+        @media (max-width: 480px) {
+          .ro-page { padding: 24px 16px 64px; }
+          .ro-title { font-size: 22px; }
+        }
+      `}</style>
+
+      <div className="ro-page">
+        <div className="ro-header">
+          <div className="ro-eyebrow">Your personalised roadmap</div>
+          <div className="ro-title">{roadmap.skill_name}</div>
+          <span className="ro-level-tag">{roadmap.skill_level}</span>
         </div>
-      </div>
 
-      {/* Progress */}
-      <div className="roadmap-progress-section">
-        <div className="roadmap-progress-section__info">
-          <p className="roadmap-progress-section__label">Overall progress</p>
-          <ProgressBar value={progressPct} label={`${progressPct}% complete`} />
+        <div className="ro-progress-row">
+          <ProgressBar value={progressPercent} style={{ flex: 1 }} />
+          <div className="ro-progress-label">{completedCount} / {totalCount} levels</div>
         </div>
-        <span className="roadmap-progress-section__pct" aria-label={`${progressPct} percent complete`}>
-          {progressPct}%
-        </span>
+
+        <div className="ro-levels">
+          {roadmap.levels.map((level) => (
+            <a
+              key={level.index}
+              href={level.locked ? undefined : `/roadmap/${roadmapId}/level/${level.index}`}
+              className={["ro-level-card", level.completed ? "completed" : ""].join(" ")}
+              aria-disabled={level.locked ? "true" : undefined}
+              aria-label={
+                level.locked
+                  ? `Level ${level.index + 1}: ${level.title} — locked`
+                  : `Level ${level.index + 1}: ${level.title}`
+              }
+            >
+              <div className="ro-level-num">{level.completed ? "✓" : level.index + 1}</div>
+              <div className="ro-level-info">
+                <div className="ro-level-title">{level.title}</div>
+                <div className="ro-level-desc">{level.description}</div>
+              </div>
+              {level.locked && <span className="ro-lock-icon">🔒</span>}
+              {level.completed && <span className="ro-check-icon">✓</span>}
+            </a>
+          ))}
+        </div>
+
+        {!roadmap.roadmap_locked && (
+          <div className="ro-regen-section">
+            <RoadmapRegenerate
+              roadmapId={roadmapId}
+              roadmapLocked={roadmap.roadmap_locked}
+              regenerationCount={roadmap.regeneration_count}
+              onRegenerateStart={() => {}}
+            />
+          </div>
+        )}
       </div>
 
-      {/* Regenerate */}
-      <RoadmapRegenerate
-        roadmapId={roadmap.id}
-        roadmapLocked={roadmapLocked}
-        regenerationCount={regenerationCount}
-        onRegenerateStart={handleRegenerate}
-      />
-
-      {/* Level list */}
-      <div className="level-list" role="list" aria-label="Roadmap levels">
-        {levels.map((level, index) => {
-          const levelState = getLevelState(level, index, currentIndex);
-          return (
-            <div key={level.index ?? index} role="listitem">
-              <LevelCard
-                level={level}
-                index={index}
-                state={levelState}
-                onClick={() => handleLevelClick(index)}
-              />
-              {index < levels.length - 1 && (
-                <div className="level-connector" aria-hidden="true" />
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
+      {showCompletion && (
+        <CompletionOverlay
+          skillName={roadmap.skill_name}
+          skillLevel={roadmap.skill_level}
+          pointsEarned={LEVEL_COMPLETE_POINTS}
+          totalPoints={userStats?.points ?? LEVEL_COMPLETE_POINTS}
+          badgeEarned={badgeEarned}
+          onLevelUp={handleLevelUp}
+          onDismiss={() => setShowCompletion(false)}
+        />
+      )}
+    </>
   );
 }
+
+export { getBadgeForLevel };

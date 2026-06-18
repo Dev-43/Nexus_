@@ -32,8 +32,16 @@ const sizeConfig = {
   xl: { outer: 120, emoji: "3.75rem", fontSize: "1.125rem"  },
 };
 
+function normalizeTier(tier: string): BadgeTier {
+  const normalized = tier.toLowerCase();
+  if (normalized in tierConfig) {
+    return normalized as BadgeTier;
+  }
+  return "bronze";
+}
+
 export function Badge({ tier, size = "md", showLabel = false, animate = false, earned = true, style }: BadgeProps) {
-  const cfg  = tierConfig[tier];
+  const cfg  = tierConfig[normalizeTier(tier)];
   const sz   = sizeConfig[size];
   const [ready, setReady] = React.useState(!animate);
 

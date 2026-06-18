@@ -24,7 +24,7 @@ export function AuthGate({ children }: AuthGateProps) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (!session) {
-        router.replace('/');
+        router.replace('/login');
       }
     });
 
@@ -34,7 +34,7 @@ export function AuthGate({ children }: AuthGateProps) {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (!session) {
-        router.replace('/');
+        router.replace('/login');
       }
     });
 
