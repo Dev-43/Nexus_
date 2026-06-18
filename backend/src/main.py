@@ -16,6 +16,8 @@ from fastapi import FastAPI
 from src.routes.roadmap import router as roadmap_router
 from src.routes.user import router as user_router
 from fastapi.middleware.cors import CORSMiddleware
+from src.routes.user import router as user_router
+from fastapi.middleware.cors import CORSMiddleware
 from src.routes.level import router as level_router
 from src.routes.sublevel import router as sublevel_router
 from src.config import get_settings
@@ -76,8 +78,8 @@ async def health():
 # app.include_router(session_router)
 # app.include_router(quiz.router)
 # app.include_router(roadmap.router)
-
-
+# app.include_router(level.router)
+# app.include_router(sublevel.router)
 # app.include_router(user.router)
 app.include_router(roadmap_router)
 app.include_router(user_router)
