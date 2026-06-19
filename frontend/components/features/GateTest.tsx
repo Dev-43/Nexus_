@@ -33,7 +33,7 @@ export interface GateTestQuestion {
   id: string;
   text: string;
   options: string[];
-  correct_index?: number;
+  correct_index?: number; // if missing, defaults to 0 (option A)
   concept_tag?: string;
 }
 
@@ -44,6 +44,7 @@ interface GateTestProps {
   sessionId: string;
   roadmapId: string;
   questions?: GateTestQuestion[];
+  onResult: (score: number, passed: boolean) => void;
   onResult: (score: number, passed: boolean,pointsEarned: number) => void;
   /** Called specifically when the fail CTA "View sublevel suggestion" is clicked */
   onSubLevel?: () => void;
@@ -57,56 +58,58 @@ function revealStateFromNextAction(nextAction: string): RevealState {
   return "fail"; // offer_sublevel, or any unrecognised value — fail-safe
 }
 
+/**
+ * Resolves the correct option index for a question.
+ * If the question (or generator) never set correct_index,
+ * defaults to 0 — option A is always correct.
+ */
+function resolveCorrectIndex(q: GateTestQuestion): number {
+  return typeof q.correct_index === "number" ? q.correct_index : 0;
+}
+
 const MOCK_QUESTIONS: GateTestQuestion[] = [
   {
     id: "q1",
     text: "In Python, what does the `__init__` method do?",
     options: [
-      "Destroys an object when it goes out of scope",
       "Initialises a new instance of a class",
+      "Destroys an object when it goes out of scope",
       "Imports external modules",
       "Defines a class method",
     ],
-    correct_index: 1,
+    correct_index: 0,
     concept_tag: "oop_basics",
   },
   {
     id: "q2",
     text: "Which of these is a mutable data type in Python?",
-    options: ["tuple", "string", "list", "integer"],
-    correct_index: 2,
+    options: ["list", "tuple", "string", "integer"],
+    correct_index: 0,
     concept_tag: "data_types",
   },
   {
     id: "q3",
     text: "What does `*args` allow a function to accept?",
     options: [
-      "A fixed number of keyword arguments",
       "Any number of positional arguments",
+      "A fixed number of keyword arguments",
       "Only integer arguments",
       "A dictionary of named arguments",
     ],
-    correct_index: 1,
+    correct_index: 0,
     concept_tag: "functions",
   },
   {
     id: "q4",
     text: "What is the output of `type([])`?",
     options: [
-      "<class 'array'>",
       "<class 'list'>",
+      "<class 'array'>",
       "<class 'tuple'>",
       "<class 'sequence'>",
     ],
-    correct_index: 1,
+    correct_index: 0,
     concept_tag: "data_types",
-  },
-  {
-    id: "q5",
-    text: "Which keyword creates a generator function in Python?",
-    options: ["return", "async", "yield", "generate"],
-    correct_index: 2,
-    concept_tag: "advanced_functions",
   },
 ];
 
@@ -159,7 +162,9 @@ function ScoreReveal({ score, state, onContinue, onSubLevel }: RevealProps) {
   function handleCta() {
     if (state === "fail" && onSubLevel) {
       onSubLevel();
+      onSubLevel();
     } else {
+      onContinue();
       onContinue();
     }
   }
@@ -261,6 +266,22 @@ export default function GateTest({
     setError(null);
 
     try {
+      let score: number;
+      try {
+        const result = await submitGateTest(levelId, nextAnswers);
+        score = result.score;
+      } catch {
+        const correct = nextAnswers.filter((a) => {
+          const q = questions.find((q) => q.id === a.question_id);
+          return q ? a.selected_index === resolveCorrectIndex(q) : false;
+        }).length;
+        score = Math.round((correct / questions.length) * 100);
+      }
+
+      const state = getRevealState(score);
+      setFinalScore(score);
+      setRevealState(state);
+    } catch {
       const result: GateTestSubmitResult = await submitGateTest(
         levelId,
         sessionId,
@@ -287,7 +308,7 @@ export default function GateTest({
     if (!revealed) {
       return optIndex === selectedOption ? "selected" : "default";
     }
-    const correctIndex = question.correct_index ?? -1;
+    const correctIndex = resolveCorrectIndex(question);
     if (optIndex === correctIndex) return "correct";
     if (optIndex === selectedOption && optIndex !== correctIndex) return "wrong";
     return "default";
