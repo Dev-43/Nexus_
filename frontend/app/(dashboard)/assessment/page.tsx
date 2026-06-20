@@ -3,7 +3,7 @@
 // frontend/app/(dashboard)/assessment/page.tsx
 // Feature 12: Adaptive Assessment Quiz Page
 
-import { useRouter } from "next/navigation";
+import { useRouter , useSearchParams} from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import styles from "./assessment.module.css";
 
@@ -370,6 +370,8 @@ function QuestionCard({
 
 export default function AssessmentPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const skillName = searchParams.get("skill") ?? "Python";
   const [skillScore, setSkillScore] = useState(0);
   const [skillLevel, setSkillLevel] = useState<"beginner" | "intermediate" | "advanced">("beginner");
   const [showComplete, setShowComplete] = useState(false);
@@ -389,7 +391,10 @@ export default function AssessmentPage() {
     []
   );
 
-  const { state, submitAnswer } = useAssessmentStream(null, { onComplete: handleComplete });
+  const { state, submitAnswer } = useAssessmentStream(
+    sessionId ? { sessionId, skillName } : null,
+    { onComplete: handleComplete }
+  );
 
   const handleAnswer = useCallback(
     (optionId: string) => {
@@ -492,7 +497,7 @@ export default function AssessmentPage() {
           <CompleteState
             skillScore={skillScore}
             skillLevel={skillLevel}
-            onContinue={() => router.push(`/roadmap/${sessionId}`)}
+            onContinue={() => router.push(`/loading?session=${sessionId}`)}
           />
         )}
       </div>

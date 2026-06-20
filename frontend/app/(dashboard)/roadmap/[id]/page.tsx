@@ -94,13 +94,14 @@ export default function RoadmapOverviewPage() {
 
   const handleLevelUp = async (nextLevel: string) => {
     if (!roadmap) return;
-    await startSession({
+    const session = await startSession({
+      user_id: roadmap.id,
       skill_name: roadmap.skill_name,
       skill_level: nextLevel,
       skip_assessment: true,
     });
-    // CompletionOverlay handles the router.push("/loading")
-  };
+  router.push(`/loading?session=${session.session_id}`);
+};
 
   const completedCount = roadmap?.levels.filter((l) => l.completed).length ?? 0;
   const totalCount = roadmap?.total_levels ?? 0;

@@ -184,14 +184,9 @@ const MOCK_SESSION: SessionStartResponse = {
   skill_level: "beginner",
 };
 
-/*export async function startSession(params: {
-  skill_name: string;
-  skill_level?: SkillLevel;
-  skip_assessment?: boolean;
-}): Promise<SessionStartResponse> {
-  return { ...MOCK_SESSION, skill_name: params.skill_name, skill_level: params.skill_level ?? "beginner" };
-}*/
+
 export async function startSession(payload: {
+  user_id: string;
   skill_name: string;
   skill_level?: string;
   skip_assessment?: boolean;
@@ -231,18 +226,27 @@ export async function submitAssessmentAnswer(params: {
   return { next_question: MOCK_QUESTIONS[1] ?? null, result: null };
 }
 
-export function getRoadmapStreamUrl(roadmapId: string): string {
-  return `${BACKEND_URL}/stream/roadmap?roadmap_id=${roadmapId}`;
+export function getRoadmapStreamUrl(sessionId: string): string {
+  return `${BACKEND_URL}/stream/roadmap?session_id=${sessionId}`;
 }
 
 export async function getRoadmap(roadmapId: string): Promise<Roadmap> {
-  return { ...MOCK_ROADMAP, id: roadmapId };
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/roadmap/${roadmapId}`);
+  if (!res.ok) throw new Error(`getRoadmap failed: ${res.status}`);
+  return res.json();
 }
 
 export async function regenerateRoadmap(id: string, feedback: string) {
-  // Mock for now — swap for real fetch on Day 5 integration sync
-  return { ok: true, regeneration_count: 1 };
-  // Real: return fetch(`/roadmap/${id}/regenerate`, { method: "POST", body: JSON.stringify({ feedback }) })
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/roadmap/${id}/regenerate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ feedback }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `regenerateRoadmap failed: ${res.status}`);
+  }
+  return res.json(); // { message, roadmap_id, regeneration_count, session_id }
 }
 
 // Mock — returns immediately so SubLevelModal works without a live backend

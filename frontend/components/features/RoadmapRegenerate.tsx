@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { regenerateRoadmap } from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface RoadmapRegenerateProps {
   roadmapId: string;
@@ -28,13 +29,16 @@ export function RoadmapRegenerate({
   const remaining = 2 - regenerationCount;
   const isLastUse = remaining === 1;
 
+  const router = useRouter();
+
   async function handleSubmit() {
     const trimmed = feedback.trim();
     if (!trimmed) return;
     setPanel("submitting");
     try {
-      await regenerateRoadmap(roadmapId, trimmed);
-      onRegenerateStart(); // parent re-mounts the SSE stream
+      const result = await regenerateRoadmap(roadmapId, trimmed);
+      onRegenerateStart();
+      router.push(`/loading?session=${result.session_id}&feedback=${encodeURIComponent(trimmed)}`);
     } catch (err) {
       // On error, revert to open so user can retry
       console.error("Regeneration failed:", err);
