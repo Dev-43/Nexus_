@@ -95,8 +95,28 @@ async def roadmap_generator_node(state: dict) -> dict:
         llm = get_model("roadmap_generation")
         structured_llm = llm.with_structured_output(Roadmap)
 
-        roadmap: Roadmap = await structured_llm.ainvoke(prompt)
-        roadmap_dict = roadmap.model_dump()
+        roadmap: Roadmap | None = await structured_llm.ainvoke(prompt)
+
+        if roadmap is None:
+            # Structured extraction failed silently (known behavior on some
+            # providers, e.g. ChatNVIDIA, when the schema isn't satisfied).
+            # Retry once before falling back.
+            roadmap = await structured_llm.ainvoke(prompt)
+
+        if roadmap is None:
+            # Still nothing — use the documented emergency fallback so the
+            # demo never crashes. See Emergency Fallback Phase, Fallback 2.
+            roadmap_dict = {
+                "skill_name": state["skill_name"],
+                "total_levels": 3,
+                "levels": [
+                    {"index": 0, "title": "Foundations", "description": "Core concepts and fundamentals", "resources": [], "locked": False},
+                    {"index": 1, "title": "Applied Skills", "description": "Hands-on practice and projects", "resources": [], "locked": True},
+                    {"index": 2, "title": "Advanced Topics", "description": "Expert patterns and real-world projects", "resources": [], "locked": True},
+                ],
+            }
+        else:
+            roadmap_dict = roadmap.model_dump()
 
         # --- Versioning ---
         new_version = state.get("roadmap_version", 0) + 1

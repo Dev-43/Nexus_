@@ -56,3 +56,8 @@ def get_model(task_type: str):
     except Exception:
         fallback_name = MODEL_ROUTING["fallback"]
         return _get_cached_llm(fallback_name)
+
+def get_fallback_model():
+    """Explicit accessor for the fallback model — used when a primary model
+    fails at call time (not just at init time), e.g. a 503 mid-stream."""
+    return _get_cached_llm(MODEL_ROUTING["fallback"])

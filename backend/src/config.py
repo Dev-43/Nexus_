@@ -60,7 +60,7 @@ def get_settings() -> Settings:
 MODEL_ROUTING: dict[str, str] = {
     "roadmap_generation": "gemini-3.5-flash",   # long structured output + Pydantic
     "quiz_generation": "meta/llama-3.3-70b-instruct",           # creative variation, fast
-    "gap_analysis": "gemini-3.5-flash",           # reasoning over test_history
+    "gap_analysis": "meta/llama-3.3-70b-instruct",           # reasoning over test_history
     "email_content": "meta/llama-3.3-70b-instruct",             # tone + writing quality
     "fallback": "meta/llama-3.3-70b-instruct",                  # if any primary model is down
 }

@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from src.graph.nodes.level_gate import level_gate_node
 from src.graph.state import NexusState
-from src.services.supabase_client import get_supabase
+from src.services.supabase_client import get_supabase_client
 
 router = APIRouter(prefix="/level", tags=["level"])
 
@@ -48,7 +48,7 @@ class GateTestResult(BaseModel):
 
 @router.post("/{level_id}/submit", response_model=GateTestResult)
 async def submit_gate_test(level_id: str, body: GateTestSubmission) -> GateTestResult:
-    supabase = get_supabase()
+    supabase = get_supabase_client()
 
     # ── Fetch current session state from Supabase ─────────────────────────────
     session_row = (

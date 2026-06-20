@@ -14,14 +14,13 @@ from typing import AsyncGenerator
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-
 from src.graph.state import NexusState
 from src.graph.nodes.roadmap_generator import roadmap_generator_node
-from src.services.model_router import get_model
+from src.services.model_router import get_model, get_fallback_model
 from src.services.supabase_client import get_supabase_client
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/roadmap", tags=["roadmap"])
+router = APIRouter(tags=["roadmap"])
 
 
 # ---------------------------------------------------------------------------
@@ -36,6 +35,7 @@ class RegenerateResponse(BaseModel):
     message: str
     roadmap_id: str
     regeneration_count: int
+    session_id: str
 
 
 # ---------------------------------------------------------------------------
@@ -85,7 +85,7 @@ async def _load_state_for_session(session_id: str) -> NexusState:
         "personality_profile": session.get("personality_profile"),
         "quiz_skipped": session.get("quiz_skipped", False),
         "roadmap": existing_roadmap["roadmap_data"] if existing_roadmap else None,
-        "roadmap_version": existing_roadmap["roadmap_version"] if existing_roadmap else 1,
+        "roadmap_version": existing_roadmap["roadmap_version"] if existing_roadmap else 0,
         "current_level_index": existing_roadmap["current_level_index"] if existing_roadmap else 0,
         "roadmap_locked": existing_roadmap["locked"] if existing_roadmap else False,
         "user_roadmap_feedback": None,
@@ -120,6 +120,35 @@ def _sse(event_type: str, payload: dict) -> str:
 # Step 1: stream narrative text for the visual WOW moment
 # Step 2: fetch structured Pydantic roadmap in parallel, save to Supabase
 # ---------------------------------------------------------------------------
+
+async def _stream_narrative(prompt: str):
+    """
+    Streams narrative tokens from the primary model. On failure, retries once,
+    then falls back to NVIDIA NIM. If any tokens were already sent before the
+    failure, yields a 'restart' event first so the frontend clears its buffer
+    before the fallback's tokens arrive — otherwise text would duplicate.
+    """
+    sent_any_tokens = False
+
+    for use_fallback in (False, False, True):  # primary, retry primary once, then fallback
+        llm = get_fallback_model() if use_fallback else get_model("roadmap_generation")
+        try:
+            async for chunk in llm.astream(prompt):
+                content = getattr(chunk, "content", None) or ""
+                if content:
+                    if use_fallback and sent_any_tokens:
+                        yield _sse("restart", {})
+                        sent_any_tokens = False
+                    yield _sse("token", {"content": content})
+                    sent_any_tokens = True
+            return
+        except Exception as exc:
+            logger.warning("Narrative stream failed (fallback=%s): %s", use_fallback, exc)
+            if use_fallback:
+                yield _sse("error", {"message": f"Stream failed: {exc}"})
+                return
+            await asyncio.sleep(1)
+            continue
 
 async def _roadmap_stream_generator(
     session_id: str,
@@ -179,13 +208,10 @@ async def _roadmap_stream_generator(
         )
 
         # --- 3. Stream narrative tokens ---
-        llm = get_model("roadmap_generation")
         yield _sse("thinking", {"message": "Generating your roadmap..."})
 
-        async for chunk in llm.astream(narrative_prompt):
-            content = getattr(chunk, "content", None) or ""
-            if content:
-                yield _sse("token", {"content": content})
+        async for event in _stream_narrative(narrative_prompt):
+             yield event
 
         # --- 4. Get structured Pydantic roadmap (step 2 — no streaming needed) ---
         yield _sse("thinking", {"message": "Finalising roadmap structure..."})
@@ -252,12 +278,8 @@ async def stream_roadmap(
 # Route: GET /roadmap/{roadmap_id}
 # ---------------------------------------------------------------------------
 
-@router.get("/{roadmap_id}")
+@router.get("/roadmap/{roadmap_id}")
 async def get_roadmap(roadmap_id: str):
-    """
-    Fetch the full structured roadmap JSON from Supabase.
-    Frontend calls this after the SSE 'done' event to get level cards etc.
-    """
     supabase = get_supabase_client()
     resp = (
         supabase.table("roadmaps")
@@ -269,14 +291,35 @@ async def get_roadmap(roadmap_id: str):
     if not resp.data:
         raise HTTPException(status_code=404, detail=f"Roadmap {roadmap_id} not found")
 
-    return resp.data
+    row = resp.data
+    roadmap_data = row.get("roadmap_data") or {}
+
+    session_resp = (
+        supabase.table("skill_sessions")
+        .select("skill_name, skill_level")
+        .eq("id", row["session_id"])
+        .single()
+        .execute()
+    )
+    session = session_resp.data or {}
+
+    return {
+        "id": row["id"],
+        "skill_name": session.get("skill_name") or roadmap_data.get("skill_name"),
+        "skill_level": session.get("skill_level") or "beginner",
+        "total_levels": roadmap_data.get("total_levels", len(roadmap_data.get("levels", []))),
+        "roadmap_locked": row.get("locked", False),
+        "regeneration_count": max(row.get("roadmap_version", 1) - 1, 0),
+        "current_level_index": row.get("current_level_index", 0),
+        "levels": roadmap_data.get("levels", []),
+    }
 
 
 # ---------------------------------------------------------------------------
 # Route: POST /roadmap/{roadmap_id}/regenerate
 # ---------------------------------------------------------------------------
 
-@router.post("/{roadmap_id}/regenerate", response_model=RegenerateResponse, status_code=202)
+@router.post("/roadmap/{roadmap_id}/regenerate", response_model=RegenerateResponse, status_code=202)
 async def regenerate_roadmap(roadmap_id: str, body: RegenerateRequest):
     """
     Accept user free-text feedback and queue a roadmap regeneration.
@@ -327,24 +370,19 @@ async def regenerate_roadmap(roadmap_id: str, body: RegenerateRequest):
     if not body.feedback or not body.feedback.strip():
         raise HTTPException(status_code=422, detail="Feedback text is required.")
 
-    # Persist feedback to the session so the stream generator reads it
-    # We store it on the roadmap row temporarily; the generator clears it after use
+    # roadmap_version is intentionally NOT bumped here. Versioning happens exactly
+    # once, inside roadmap_generator_node, when the regeneration actually runs.
+    # Bumping it here too double-counted every regeneration against the cap.
     session_id = roadmap["session_id"]
-    supabase = get_supabase_client()
-    supabase.table("roadmaps").update(
-        {"roadmap_version": current_version + 1}  # optimistic increment; generator confirms
-    ).eq("id", roadmap_id).execute()
-
-    # Also write feedback to skill_sessions as a jsonb column if you want to persist it
-    # For now, the stream generator receives it via the regenerate SSE endpoint below
 
     return RegenerateResponse(
         message=(
-            "Regeneration accepted. Open GET /stream/roadmap/regenerate "
+            "Regeneration accepted. Open GET /stream/regenerate "
             f"?session_id={session_id}&feedback=<encoded> to receive the new stream."
         ),
         roadmap_id=roadmap_id,
         regeneration_count=regen_count + 1,
+        session_id=session_id,
     )
 
 

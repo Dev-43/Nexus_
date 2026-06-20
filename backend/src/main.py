@@ -14,12 +14,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from src.routes.roadmap import router as roadmap_router
-from src.routes.user import router as user_router
 from fastapi.middleware.cors import CORSMiddleware
 from src.routes.user import router as user_router
-from fastapi.middleware.cors import CORSMiddleware
 from src.routes.level import router as level_router
 from src.routes.sublevel import router as sublevel_router
+from src.routes import session as session_routes
+from src.routes import quiz as quiz_routes
 from src.config import get_settings
 
 settings = get_settings()
@@ -85,9 +85,12 @@ app.include_router(roadmap_router)
 app.include_router(user_router)
 app.include_router(level_router)
 app.include_router(sublevel_router)
+app.include_router(session_routes.router)
+app.include_router(quiz_routes.router)
 
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("src.main:app", host="0.0.0.0", port=settings.PORT, reload=True)
+
 
