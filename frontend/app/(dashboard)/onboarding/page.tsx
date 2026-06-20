@@ -1,15 +1,18 @@
 "use client";
 
+// frontend/app/(dashboard)/onboarding/page.tsx
+// Personality quiz, shown ONCE per user, right after login, before any
+// skill is selected. Replaces the old flow where /quiz ran after every
+// /skill selection (wrong — was re-asking per skill, not per user).
+
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { createBrowserClient } from "@supabase/ssr";
 import { QuizOption } from "@/components/ui/QuizOption";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { submitPersonalityQuiz, type PersonalityProfile } from "@/lib/api";
+import { submitPersonalityQuiz, getPersonalityQuizStatus, type PersonalityProfile } from "@/lib/api";
 
-// ── Quiz content ──────────────────────────────────────────────
-// Maps to PersonalityProfile fields:
-//   learning_style | pace | feedback_preference | goal_type | session_length
 const QUESTIONS = [
   {
     id: "learning_style" as const,
@@ -58,76 +61,85 @@ const QUESTIONS = [
   options: { label: string; text: string }[];
 }[];
 
-// Map the text answer back to the typed PersonalityProfile value
 const VALUE_MAP: Record<string, string> = {
-  "Diagrams & visuals":      "visual",
-  "Written explanations":    "text",
+  "Diagrams & visuals": "visual",
+  "Written explanations": "text",
   "Step-by-step curriculum": "structured",
-  "Follow my curiosity":     "exploratory",
-  "Frequent short quizzes":  "frequent",
+  "Follow my curiosity": "exploratory",
+  "Frequent short quizzes": "frequent",
   "Minimal — I'll self-assess": "minimal",
-  "Career or job":           "career",
-  "Academic study":          "academic",
-  "Hobby or curiosity":      "hobby",
+  "Career or job": "career",
+  "Academic study": "academic",
+  "Hobby or curiosity": "hobby",
   "Short bursts (under 30 min)": "short",
-  "Long sessions (1 hr+)":   "long",
+  "Long sessions (1 hr+)": "long",
 };
 
-// ── Component ─────────────────────────────────────────────────
-export default function PersonalityQuizPage() {
+type LoadState = "checking" | "show_quiz" | "already_done";
+
+export default function OnboardingPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  // Matches the ACTUAL pattern used by the assessment page
-  // (frontend/app/(dashboard)/assessment/page.tsx) — session id lives in
-  // localStorage under "nexus_session_id", written by skill selection
-  // right after POST /session/start resolves. Not a URL param: only
-  // /skill writes it, every downstream page reads the same key directly,
-  // so there's no per-page "remember to forward it" step that can be
-  // silently missed (which is what happened when this page briefly used
-  // ?session= — assessment never read it).
-  const [sessionId, setSessionId] = useState<string>("");
-  // Distinguishes "haven't read localStorage yet" (normal, lasts one
-  // render on every load) from "checked and there's really nothing
-  // there" (real error) — see render guard below for why this matters.
-  const [hasCheckedSession, setHasCheckedSession] = useState(false);
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  const [userId, setUserId] = useState<string | null>(null);
+  const [loadState, setLoadState] = useState<LoadState>("checking");
+  const [step, setStep] = useState(0);
+  const [selected, setSelected] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<Partial<Record<keyof PersonalityProfile, string>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDone, setIsDone] = useState(false);
+
+  // ── Check quiz status on mount, before rendering anything ──────
   useEffect(() => {
-    const id = localStorage.getItem("nexus_session_id") ?? "";
-    setSessionId(id);
-    setHasCheckedSession(true);
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        // No session — shouldn't normally land here, authGate should
+        // have caught this, but fail safe rather than crash.
+        router.push("/");
+        return;
+      }
+      setUserId(user.id);
+
+      try {
+        const status = await getPersonalityQuizStatus(user.id);
+        setLoadState(status.has_completed ? "already_done" : "show_quiz");
+      } catch (err) {
+        console.error("Failed to check personality quiz status:", err);
+        // Fail open — show the quiz rather than silently blocking
+        // onboarding entirely if the status check itself errors.
+        setLoadState("show_quiz");
+      }
+    })();
   }, []);
 
-  // skill is still read from the URL — assessment page does the same
-  // (searchParams.get("skill") ?? "Python") — so /quiz needs it forwarded
-  // the same way skill-selection already sends it to /assessment today.
-  const skill = searchParams.get("skill");
-  const nextStepUrl = `/assessment${skill ? `?skill=${encodeURIComponent(skill)}` : ""}`;
+  // ── Redirect straight through if already done ───────────────────
+  useEffect(() => {
+    if (loadState === "already_done") {
+      router.push("/skill");
+    }
+  }, [loadState, router]);
 
-  const [step, setStep]           = useState(0);
-  const [selected, setSelected]   = useState<string | null>(null);
-  // Store the raw text answer per question id
-  const [answers, setAnswers]     = useState<Partial<Record<keyof PersonalityProfile, string>>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDone, setIsDone]       = useState(false);
-
-  const question    = QUESTIONS[step];
-  const totalSteps  = QUESTIONS.length;
+  const question = QUESTIONS[step];
+  const totalSteps = QUESTIONS.length;
   const progressVal = Math.round((step / totalSteps) * 100);
-  const isLastStep  = step === totalSteps - 1;
+  const isLastStep = step === totalSteps - 1;
 
-  // ── Build PersonalityProfile from collected answers ───────────
   const buildProfile = (
     finalAnswers: Partial<Record<keyof PersonalityProfile, string>>
   ): PersonalityProfile => ({
-    learning_style:       (VALUE_MAP[finalAnswers.learning_style       ?? ""] as PersonalityProfile["learning_style"])       ?? "visual",
-    pace:                 (VALUE_MAP[finalAnswers.pace                 ?? ""] as PersonalityProfile["pace"])                 ?? "structured",
-    feedback_preference:  (VALUE_MAP[finalAnswers.feedback_preference  ?? ""] as PersonalityProfile["feedback_preference"])  ?? "frequent",
-    goal_type:            (VALUE_MAP[finalAnswers.goal_type            ?? ""] as PersonalityProfile["goal_type"])            ?? "career",
-    session_length:       (VALUE_MAP[finalAnswers.session_length       ?? ""] as PersonalityProfile["session_length"])       ?? "short",
+    learning_style: (VALUE_MAP[finalAnswers.learning_style ?? ""] as PersonalityProfile["learning_style"]) ?? "visual",
+    pace: (VALUE_MAP[finalAnswers.pace ?? ""] as PersonalityProfile["pace"]) ?? "structured",
+    feedback_preference: (VALUE_MAP[finalAnswers.feedback_preference ?? ""] as PersonalityProfile["feedback_preference"]) ?? "frequent",
+    goal_type: (VALUE_MAP[finalAnswers.goal_type ?? ""] as PersonalityProfile["goal_type"]) ?? "career",
+    session_length: (VALUE_MAP[finalAnswers.session_length ?? ""] as PersonalityProfile["session_length"]) ?? "short",
   });
 
-  // ── Handlers ──────────────────────────────────────────────────
   const handleNext = async () => {
-    if (!selected) return;
+    if (!selected || !userId) return;
 
     const updatedAnswers = { ...answers, [question.id]: selected };
     setAnswers(updatedAnswers);
@@ -138,70 +150,48 @@ export default function PersonalityQuizPage() {
       return;
     }
 
-    // Final step — submit
-    if (!sessionId) {
-      console.error("Quiz submit attempted with no session id in localStorage");
-      router.push("/skill");
-      return;
-    }
-
     setIsSubmitting(true);
     try {
-      await submitPersonalityQuiz(sessionId, {
+      await submitPersonalityQuiz(userId, {
         skipped: false,
         profile: buildProfile(updatedAnswers),
       });
       setIsDone(true);
-      setTimeout(() => router.push(nextStepUrl), 900);
+      setTimeout(() => router.push("/skill"), 900);
     } catch (err) {
       console.error("Quiz submit failed:", err);
-      router.push(nextStepUrl);
+      router.push("/skill");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleSkip = async () => {
-    if (!sessionId) {
+    if (!userId) {
       router.push("/skill");
       return;
     }
-
     setIsSubmitting(true);
     try {
-      await submitPersonalityQuiz(sessionId, { skipped: true });
+      await submitPersonalityQuiz(userId, { skipped: true });
     } catch (err) {
       console.error("Skip failed:", err);
     } finally {
       setIsSubmitting(false);
-      router.push(nextStepUrl);
+      router.push("/skill");
     }
   };
 
-  // ── Session loading / missing guard ──────────────────────────
-  // hasCheckedSession distinguishes "haven't read localStorage yet"
-  // (normal on every load, lasts one render) from "checked and there
-  // really is nothing there" (real error). Without this distinction,
-  // !sessionId is true during that brief window too, and every user
-  // would see a false "Missing session" flash before the effect runs.
-  if (!hasCheckedSession) {
-    return null;
+  // ── Loading / already-done states ────────────────────────────────
+  if (loadState === "checking" || loadState === "already_done") {
+    return null; // brief, intentional blank frame — redirect handles "already_done"
   }
 
-  if (!sessionId) {
-    return (
-      <div style={{ padding: 40, textAlign: "center" }}>
-        Missing session — go back and select a skill.
-      </div>
-    );
-  }
-
-  // ── Done state ────────────────────────────────────────────────
   if (isDone) {
     return (
       <div className="quiz-done">
         <div className="quiz-done__icon">✓</div>
-        <p className="quiz-done__label">Got it — building your profile…</p>
+        <p className="quiz-done__label">Got it — let's pick a skill…</p>
         <style jsx>{`
           .quiz-done {
             min-height: 100vh;
@@ -231,31 +221,23 @@ export default function PersonalityQuizPage() {
           }
           @keyframes pop {
             from { transform: scale(0.6); opacity: 0; }
-            to   { transform: scale(1);   opacity: 1; }
+            to { transform: scale(1); opacity: 1; }
           }
         `}</style>
       </div>
     );
   }
 
-  // ── Main render ───────────────────────────────────────────────
   return (
     <div className="quiz-page">
-      {/* Header */}
       <header className="quiz-header">
         <span className="quiz-header__brand">Nexus</span>
-        <button
-          className="quiz-header__skip"
-          onClick={handleSkip}
-          disabled={isSubmitting}
-        >
+        <button className="quiz-header__skip" onClick={handleSkip} disabled={isSubmitting}>
           Skip quiz
         </button>
       </header>
 
-      {/* Card */}
       <main className="quiz-card">
-        {/* Progress bar — uses `value` prop */}
         <ProgressBar
           value={progressVal}
           max={100}
@@ -263,14 +245,8 @@ export default function PersonalityQuizPage() {
           label={`Question ${step + 1} of ${totalSteps}`}
           animated
         />
-
-        {/* Step pill */}
         <p className="quiz-step-label">Learning style · {step + 1} / {totalSteps}</p>
-
-        {/* Question */}
         <h2 className="quiz-question">{question.text}</h2>
-
-        {/* Options — `label` is the badge/emoji, `text` is the description */}
         <div className="quiz-options">
           {question.options.map((opt) => (
             <QuizOption
@@ -282,8 +258,6 @@ export default function PersonalityQuizPage() {
             />
           ))}
         </div>
-
-        {/* CTA */}
         <div className="quiz-cta">
           <Button
             variant="primary"
@@ -291,12 +265,11 @@ export default function PersonalityQuizPage() {
             disabled={!selected || isSubmitting}
             loading={isSubmitting}
           >
-            {isLastStep ? "Build my roadmap" : "Next"}
+            {isLastStep ? "Continue" : "Next"}
           </Button>
         </div>
       </main>
 
-      {/* Step dots */}
       <nav className="quiz-dots" aria-label="Quiz progress">
         {QUESTIONS.map((_, i) => (
           <span
@@ -315,8 +288,6 @@ export default function PersonalityQuizPage() {
           align-items: center;
           padding: 0 16px 40px;
         }
-
-        /* Header */
         .quiz-header {
           width: 100%;
           max-width: 560px;
@@ -345,8 +316,6 @@ export default function PersonalityQuizPage() {
         }
         .quiz-header__skip:hover { color: var(--color-text-primary); }
         .quiz-header__skip:disabled { opacity: 0.4; cursor: not-allowed; }
-
-        /* Card */
         .quiz-card {
           width: 100%;
           max-width: 560px;
@@ -358,8 +327,6 @@ export default function PersonalityQuizPage() {
           flex-direction: column;
           gap: 20px;
         }
-
-        /* Step label */
         .quiz-step-label {
           font-size: 11px;
           font-weight: 600;
@@ -369,8 +336,6 @@ export default function PersonalityQuizPage() {
           margin: 0;
           font-family: var(--font-body);
         }
-
-        /* Question */
         .quiz-question {
           font-size: clamp(17px, 3vw, 21px);
           font-weight: 700;
@@ -379,18 +344,12 @@ export default function PersonalityQuizPage() {
           margin: 0;
           font-family: var(--font-display);
         }
-
-        /* Options */
         .quiz-options {
           display: flex;
           flex-direction: column;
           gap: 10px;
         }
-
-        /* CTA */
         .quiz-cta { margin-top: 4px; }
-
-        /* Step dots */
         .quiz-dots {
           display: flex;
           gap: 8px;
@@ -403,9 +362,8 @@ export default function PersonalityQuizPage() {
           background: var(--color-border);
           transition: background 0.2s, transform 0.2s;
         }
-        .quiz-dot--done    { background: var(--color-brand); opacity: 0.35; }
-        .quiz-dot--active  { background: var(--color-brand); transform: scale(1.35); }
-
+        .quiz-dot--done { background: var(--color-brand); opacity: 0.35; }
+        .quiz-dot--active { background: var(--color-brand); transform: scale(1.35); }
         @media (max-width: 480px) {
           .quiz-card { padding: 20px; }
         }

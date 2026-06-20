@@ -201,10 +201,30 @@ export async function startSession(payload: {
 }
 
 export async function submitPersonalityQuiz(
+  userId: string,
   payload: { skipped: true } | { skipped: false; profile: PersonalityProfile }
-): Promise<{ success: boolean; personality_profile: PersonalityProfile | null }> {
-  if (payload.skipped) return { success: true, personality_profile: null };
-  return { success: true, personality_profile: payload.profile };
+): Promise<{ success: boolean; personality_profile: PersonalityProfile | null; quiz_skipped: boolean }> {
+  const body = payload.skipped
+    ? { user_id: userId, skipped: true }
+    : { user_id: userId, skipped: false, ...payload.profile };
+
+  const res = await fetch(`${BACKEND_URL}/quiz/personality/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`submitPersonalityQuiz failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getPersonalityQuizStatus(
+  userId: string
+): Promise<{ has_completed: boolean; personality_profile: PersonalityProfile | null }> {
+  const res = await fetch(
+    `${BACKEND_URL}/quiz/personality/status?user_id=${encodeURIComponent(userId)}`
+  );
+  if (!res.ok) throw new Error(`getPersonalityQuizStatus failed: ${res.status}`);
+  return res.json();
 }
 
 export function getAssessmentStreamUrl(session_id: string): string {

@@ -23,13 +23,30 @@ class SessionStartResponse(BaseModel):
 async def start_session(payload: SessionStartRequest):
     supabase = get_supabase_client()
 
+    # personality_profile now read from user_stats (per-user, set once at
+    # onboarding) instead of being hardcoded to None on every session.
+    # Wrapped in try/except so a lookup failure never blocks session
+    # creation — falls back to None on any error, same as before.
+    personality_profile = None
+    try:
+        stats_result = (
+            supabase.table("user_stats")
+            .select("personality_profile")
+            .eq("user_id", payload.user_id)
+            .execute()
+        )
+        if stats_result.data:
+            personality_profile = stats_result.data[0].get("personality_profile")
+    except Exception:
+        personality_profile = None
+
     insert_data = {
         "user_id": payload.user_id,
         "skill_name": payload.skill_name,
         "skill_score": 0.0,
         "skill_level": payload.skill_level or "beginner",
-        "personality_profile": None,
-        "quiz_skipped": False,
+        "personality_profile": personality_profile,
+        "quiz_skipped": personality_profile is None,
         "status": "active",
     }
 

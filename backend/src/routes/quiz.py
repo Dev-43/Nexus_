@@ -20,7 +20,9 @@ from fastapi import APIRouter, Request ,HTTPException
 from fastapi.responses import StreamingResponse
 from src.services.supabase_client import get_supabase_client
 from src.services.model_router import get_model
+from src.graph.nodes.personality_quiz import personality_quiz_node
 from pydantic import BaseModel
+from typing import Optional
 
 from src.graph.nodes.skill_assessment import (
     calculate_skill_score,
@@ -31,10 +33,12 @@ from src.graph.nodes.skill_assessment import (
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 TOTAL_QUESTIONS = 6
 
 # --- In-memory session store (dev only — swap for Redis in prod) ---
 _assessment_sessions: dict[str, dict] = {}
+
 
 
 class GeneratedQuestion(BaseModel):
@@ -68,7 +72,117 @@ def _placeholder_question(skill_name: str, difficulty: str, index: int) -> dict:
         "_correct_index": 0,
     }
 
+class PersonalityQuizSubmission(BaseModel):
+    """
+    Keyed by user_id, not session_id — personality is a fact about the
+    USER, captured once ever, not once per skill. Written to
+    user_stats.personality_profile, which session.py reads when building
+    NexusState for any new skill_session, regardless of which skill.
+    """
+    user_id: str
+    skipped: bool = False
+    learning_style: Optional[str] = None
+    pace: Optional[str] = None
+    feedback_preference: Optional[str] = None
+    goal_type: Optional[str] = None
+    session_length: Optional[str] = None
 
+
+@router.post("/quiz/personality/submit")
+async def submit_personality_quiz(payload: PersonalityQuizSubmission):
+    """
+    Runs personality_quiz_node (unchanged) and persists the result to
+    user_stats instead of skill_sessions.
+
+    Uses upsert, not update: we don't know for certain that a user_stats
+    row already exists for this user, so a plain update() would
+    silently no-op if the row is missing. Upsert handles both cases.
+    """
+    supabase = get_supabase_client()
+
+    positional_answers = None
+    if not payload.skipped:
+        positional_answers = [
+            payload.learning_style or "",
+            payload.pace or "",
+            payload.session_length or "",
+            payload.feedback_preference or "",
+            payload.goal_type or "",
+        ]
+
+    node_state = {
+        "feature_flags": {"personality_quiz": True},
+        "quiz_input": {
+            "skipped": payload.skipped,
+            "answers": positional_answers,
+        },
+    }
+
+    result_state = personality_quiz_node(node_state)
+
+    if result_state.get("next_action") == "error_handler":
+        logger.error(
+            "personality_quiz_node errored for user %s: %s",
+            payload.user_id, result_state.get("error_message"),
+        )
+        raise HTTPException(status_code=500, detail="Personality quiz processing failed")
+
+    skipped_result = result_state.get("quiz_skipped")
+
+    profile = None
+    if not skipped_result:
+        profile = {
+            "learning_style": payload.learning_style,
+            "pace": payload.pace,
+            "feedback_preference": payload.feedback_preference,
+            "goal_type": payload.goal_type,
+            "session_length": payload.session_length,
+        }
+
+    try:
+        supabase.table("user_stats").upsert({
+            "user_id": payload.user_id,
+            "personality_profile": profile,
+        }).execute()
+    except Exception as exc:
+        logger.error(
+            "Failed to write personality_profile for user %s: %s",
+            payload.user_id, exc,
+        )
+        raise HTTPException(status_code=500, detail="Failed to save personality profile")
+
+    return {
+        "success": True,
+        "personality_profile": profile,
+        "quiz_skipped": skipped_result,
+    }
+
+
+@router.get("/quiz/personality/status")
+async def get_personality_quiz_status(user_id: str):
+    """
+    Lets the onboarding page check, before rendering anything, whether
+    this user has already taken the personality quiz.
+
+    Note: explicit "skip" isn't separately tracked — a user who skips
+    gets personality_profile written as None, same as "never asked".
+    Decided acceptable: skippers may be asked again on a future login.
+    """
+    supabase = get_supabase_client()
+    result = (
+        supabase.table("user_stats")
+        .select("personality_profile")
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    if not result.data:
+        return {"has_completed": False, "personality_profile": None}
+
+    profile = result.data[0].get("personality_profile")
+    return {"has_completed": profile is not None, "personality_profile": profile}
+
+ 
 
 async def _generate_question(skill_name: str, difficulty: str, index: int, asked_concepts: list[str]) -> dict:
     """
