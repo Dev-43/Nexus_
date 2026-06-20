@@ -7,6 +7,7 @@ import Card from "@/components/ui/Card";
 import ProgressBar from "@/components/ui/ProgressBar";
 import GateTest from "@/components/features/GateTest";
 import SubLevelModal, { type SublevelSuggestion } from "@/components/features/SubLevelModal";
+import NavBar from "@/components/layout/NavBar";
 
 // ---------------------------------------------------------------------------
 // Mock roadmap data — replace with api.getRoadmap(id) once backend is live
@@ -247,7 +248,7 @@ function LessonCard({
           : "var(--color-surface)",
         border: `1.5px solid ${isRead ? "rgba(99,102,241,0.25)" : "var(--color-border)"}`,
         borderRadius: "var(--radius-lg)",
-        padding: "var(--space-6)",
+        padding: "28px",
         transition: "border-color 0.3s ease, background 0.3s ease",
         position: "relative",
       }}
@@ -257,15 +258,17 @@ function LessonCard({
         style={{
           display: "flex",
           alignItems: "flex-start",
-          gap: "var(--space-3)",
-          marginBottom: "var(--space-4)",
+          gap: "16px",
+          marginBottom: "20px",
+          paddingBottom: "20px",
+          borderBottom: "1px solid var(--color-border)",
         }}
       >
         {/* Step indicator */}
         <div
           style={{
-            width: 32,
-            height: 32,
+            width: 36,
+            height: 36,
             borderRadius: "50%",
             background: isRead
               ? "var(--color-primary)"
@@ -276,6 +279,7 @@ function LessonCard({
             justifyContent: "center",
             flexShrink: 0,
             transition: "all 0.3s ease",
+            marginTop: 2,
           }}
         >
           {isRead ? (
@@ -302,23 +306,25 @@ function LessonCard({
           )}
         </div>
 
-        <div style={{ flex: 1 }}>
-          <h3
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h2
             style={{
               margin: 0,
-              fontSize: "var(--text-lg)",
-              fontWeight: 600,
+              fontFamily: "var(--font-display)",
+              fontSize: "1.375rem",
+              fontWeight: 700,
               color: "var(--color-text-primary)",
-              lineHeight: 1.3,
+              lineHeight: 1.25,
+              letterSpacing: "-0.02em",
             }}
           >
             {lesson.title}
-          </h3>
+          </h2>
           <span
             style={{
-              fontSize: "var(--text-sm)",
+              fontSize: "0.8125rem",
               color: "var(--color-text-secondary)",
-              marginTop: 2,
+              marginTop: 6,
               display: "block",
             }}
           >
@@ -329,13 +335,15 @@ function LessonCard({
         {isRead && (
           <span
             style={{
-              fontSize: "var(--text-xs)",
+              fontSize: "0.75rem",
               fontWeight: 500,
               color: "var(--color-primary)",
               background: "rgba(99,102,241,0.1)",
-              padding: "2px 10px",
+              padding: "4px 12px",
               borderRadius: 999,
               whiteSpace: "nowrap",
+              alignSelf: "flex-start",
+              marginTop: 4,
             }}
           >
             Read
@@ -346,10 +354,9 @@ function LessonCard({
       {/* Content */}
       <div
         style={{
-          fontSize: "var(--text-base)",
-          lineHeight: 1.75,
-          color: "var(--color-text-primary)",
-          marginBottom: "var(--space-4)",
+          fontSize: "0.9375rem",
+          lineHeight: 1.8,
+          color: "var(--color-text-secondary)",
         }}
       >
         {lesson.content.split("\n\n").map((block, i) => {
@@ -362,12 +369,13 @@ function LessonCard({
                   background: "var(--color-surface-raised)",
                   border: "1px solid var(--color-border)",
                   borderRadius: "var(--radius-md)",
-                  padding: "var(--space-4)",
+                  padding: "16px",
                   fontSize: "13px",
                   overflowX: "auto",
                   fontFamily: "var(--font-mono, monospace)",
                   lineHeight: 1.6,
-                  margin: "var(--space-3) 0",
+                  margin: "16px 0",
+                  color: "var(--color-text-primary)",
                 }}
               >
                 <code>{code}</code>
@@ -377,14 +385,15 @@ function LessonCard({
           if (block.includes("\n-")) {
             const [intro, ...items] = block.split("\n-");
             return (
-              <div key={i}>
+              <div key={i} style={{ marginBottom: "16px" }}>
                 {intro && (
-                  <p style={{ margin: "0 0 var(--space-2) 0" }}>{intro}</p>
+                  <p style={{ margin: "0 0 12px 0", color: "var(--color-text-primary)" }}>{intro}</p>
                 )}
                 <ul
                   style={{
-                    margin: "0 0 var(--space-2) 0",
-                    paddingLeft: "var(--space-5)",
+                    margin: 0,
+                    paddingLeft: "20px",
+                    listStyleType: "disc",
                   }}
                 >
                   {items.map((item, j) => {
@@ -393,8 +402,9 @@ function LessonCard({
                       <li
                         key={j}
                         style={{
-                          marginBottom: "var(--space-1)",
+                          marginBottom: "8px",
                           color: "var(--color-text-primary)",
+                          paddingLeft: "4px",
                         }}
                       >
                         {parts.map((p, k) =>
@@ -416,7 +426,12 @@ function LessonCard({
             return (
               <p
                 key={i}
-                style={{ margin: "0 0 var(--space-2) 0", lineHeight: 1.75 }}
+                style={{
+                  margin: "0 0 12px 0",
+                  lineHeight: 1.8,
+                  color: "var(--color-text-primary)",
+                  fontWeight: 500,
+                }}
               >
                 {parts.map((p, k) =>
                   p.startsWith("**") ? (
@@ -435,7 +450,7 @@ function LessonCard({
           }
           const inlineParts = block.split(/(`[^`]+`)/g);
           return (
-            <p key={i} style={{ margin: "0 0 var(--space-2) 0" }}>
+            <p key={i} style={{ margin: "0 0 16px 0", color: "var(--color-text-primary)" }}>
               {inlineParts.map((p, k) =>
                 p.startsWith("`") ? (
                   <code
@@ -465,10 +480,12 @@ function LessonCard({
         <div
           style={{
             borderTop: "1px solid var(--color-border)",
-            paddingTop: "var(--space-3)",
+            paddingTop: "16px",
+            marginTop: "20px",
             display: "flex",
             flexWrap: "wrap",
-            gap: "var(--space-2)",
+            gap: "8px",
+            alignItems: "center",
           }}
         >
           <span
@@ -604,26 +621,28 @@ export default function LevelContentPage() {
   }
 
   return (
-    <div
-      style={{
-        maxWidth: 720,
-        margin: "0 auto",
-        padding: "var(--space-6) var(--space-4) var(--space-16)",
-      }}
-    >
-      {/* Sticky progress header */}
+    <>
+      <NavBar />
       <div
         style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-          background: "var(--color-bg)",
-          paddingTop: "var(--space-4)",
-          paddingBottom: "var(--space-4)",
-          marginBottom: "var(--space-6)",
-          borderBottom: "1px solid var(--color-border)",
+          maxWidth: 720,
+          margin: "0 auto",
+          padding: "24px 16px 64px",
         }}
       >
+        {/* Sticky progress header */}
+        <div
+          style={{
+            position: "sticky",
+            top: 56,
+            zIndex: 10,
+            background: "var(--color-bg)",
+            paddingTop: "8px",
+            paddingBottom: "16px",
+            marginBottom: "24px",
+            borderBottom: "1px solid var(--color-border)",
+          }}
+        >
         {/* Breadcrumb */}
         <div
           style={{
@@ -721,8 +740,8 @@ export default function LevelContentPage() {
         style={{
           display: "flex",
           flexDirection: "column",
-          gap: "var(--space-4)",
-          marginBottom: "var(--space-10)",
+          gap: "32px",
+          marginBottom: "40px",
         }}
       >
         {level.lessons.map((lesson, i) => (
@@ -831,6 +850,7 @@ export default function LevelContentPage() {
         }}
       />
     </div>
+    </>
   );
 }
 
