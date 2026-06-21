@@ -43,7 +43,10 @@ async def lifespan(app: FastAPI):
         # fast under Railway's instance scaling.
         from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
-        checkpointer_ctx = AsyncPostgresSaver.from_conn_string(settings.POSTGRES_URL)
+        checkpointer_ctx = AsyncPostgresSaver.from_conn_string(
+            settings.POSTGRES_URL,
+            pipeline=False,
+        )
         checkpointer = await checkpointer_ctx.__aenter__()
         await checkpointer.setup()
     else:
