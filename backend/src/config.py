@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     ENV: Literal["development", "production"] = "development"
     SECRET_KEY: str = ""
+    ALLOWED_ORIGINS: str = "http://localhost:3000"  # comma-separated, parsed via settings.allowed_origins_list
     # --- Supabase / Postgres ---
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_ROLE_KEY: str = ""
@@ -40,6 +41,11 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     # --- Feature flags / overrides ---
     USE_FALLBACK_LLM: bool = False
+
+    @property
+    def allowed_origins_list(self) -> list[str]:
+        """Split ALLOWED_ORIGINS into a list, stripping whitespace per entry."""
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
 
 
 @lru_cache

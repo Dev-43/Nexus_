@@ -81,4 +81,4 @@ node_modules/
 # UV / pipx local artifacts
 .uv/
 setup_feature1.sh
-*.sql
+*.sql.dev_cache/

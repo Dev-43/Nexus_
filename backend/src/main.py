@@ -8,6 +8,9 @@ FastAPI entry point for the Nexus backend.
 - ENV=development -> AsyncSqliteSaver (local file, graph state survives restarts)
 - ENV=production  -> Supabase Postgres checkpointer (swapped on Day 6)
 - GET /health -> {"status": "ok"} smoke-test endpoint
+- CORS origins read from settings.ALLOWED_ORIGINS (comma-separated) so the
+  Vercel production domain can be added without touching code — Railway env
+  var only.
 """
 
 from contextlib import asynccontextmanager
@@ -34,7 +37,10 @@ async def lifespan(app: FastAPI):
     checkpointer_ctx = None
 
     if settings.ENV == "production":
-        # Day 6: swap to Supabase Postgres checkpointer using settings.POSTGRES_URL
+        # Day 6: Supabase Postgres checkpointer using settings.POSTGRES_URL
+        # NOTE: POSTGRES_URL must be the Supabase POOLER url (port 6543),
+        # not the direct connection (5432) — direct connections exhaust
+        # fast under Railway's instance scaling.
         from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
         checkpointer_ctx = AsyncPostgresSaver.from_conn_string(settings.POSTGRES_URL)
@@ -59,13 +65,18 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Nexus Backend", version="0.1.0", lifespan=lifespan)
 
+# CORS — origins come from settings.ALLOWED_ORIGINS (comma-separated string
+# parsed in config.py). Local default is just localhost:3000; Railway prod
+# var should be set to "http://localhost:3000,https://nexus.vercel.app"
+# once Feature 30 (Vercel deploy) is live.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=settings.allowed_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.get("/health")
 async def health():
@@ -73,14 +84,7 @@ async def health():
     return {"status": "ok"}
 
 
-# Routers are registered here as they're built (Day 2+):
-# from src.routes import session, quiz, roadmap, level, sublevel, user
-# app.include_router(session_router)
-# app.include_router(quiz.router)
-# app.include_router(roadmap.router)
-# app.include_router(level.router)
-# app.include_router(sublevel.router)
-# app.include_router(user.router)
+# Routers
 app.include_router(roadmap_router)
 app.include_router(user_router)
 app.include_router(level_router)
@@ -92,5 +96,3 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("src.main:app", host="0.0.0.0", port=settings.PORT, reload=True)
-
-
