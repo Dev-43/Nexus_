@@ -381,6 +381,5 @@ export default function LevelContentPage() {
         }}
       />
     </div>
-    </>
   );
 }
