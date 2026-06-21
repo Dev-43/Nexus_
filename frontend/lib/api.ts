@@ -202,7 +202,7 @@ export async function startSession(payload: {
   skill_level?: string;
   skip_assessment?: boolean;
 }) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/session/start`, {
+  const res = await fetch(`${BACKEND_URL}/session/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -262,13 +262,13 @@ export function getRoadmapStreamUrl(sessionId: string): string {
 }
 
 export async function getRoadmap(roadmapId: string): Promise<Roadmap> {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/roadmap/${roadmapId}`);
+  const res = await fetch(`${BACKEND_URL}/roadmap/${roadmapId}`);
   if (!res.ok) throw new Error(`getRoadmap failed: ${res.status}`);
   return res.json();
 }
 
 export async function regenerateRoadmap(id: string, feedback: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/roadmap/${id}/regenerate`, {
+  const res = await fetch(`${BACKEND_URL}/roadmap/${id}/regenerate`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ feedback }),
