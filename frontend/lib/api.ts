@@ -10,17 +10,19 @@ export type SkillLevel = "beginner" | "intermediate" | "advanced";
 
 export interface Resource {
   title: string;
-  url: string;
-  type: "article" | "video" | "exercise";
+  type: "article" | "video" | "exercise" | "project" | "documentation";
+  url?: string;
+  description?: string;
 }
-
+ 
 export interface Level {
   index: number;
   title: string;
   description: string;
-  resources: Resource[];
   locked: boolean;
+  resources: Resource[];
 }
+
 
 export interface Roadmap {
   id: string;
@@ -285,12 +287,12 @@ export async function submitSublevelDecision(
 }
 
 
-export async function getUserStats(): Promise<UserStats> {
+export async function getUserStats(userId: string): Promise<UserStats> {
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/stats`,
+    `${BACKEND_URL}/user/stats?user_id=${encodeURIComponent(userId)}`,
     {
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',   // sends the Supabase session cookie
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
     }
   );
   if (!res.ok) throw new Error(`GET /user/stats failed: ${res.status}`);
@@ -305,23 +307,41 @@ interface AnswerRecord {
   concept_tag?: string;
 }
 
+export interface GateAnswerSubmission {
+  question_id: string;
+  selected_option: string;
+  correct: boolean;
+  concept_tag?: string;
+}
+
+export interface GateTestSubmitResult {
+  score: number;            // 0.0-1.0, NOT a percentage
+  passed: boolean;
+  next_action: "unlock_next_level" | "partial_retry" | "offer_sublevel";
+  fail_count: number;
+  attempt_number: number;
+  roadmap_locked: boolean;
+  points_earned: number;
+}
+
 export async function submitGateTest(
   levelId: string,
-  answers: AnswerRecord[]
-): Promise<{ score: number; passed: boolean; attempt_number: number }> {
-  // MOCK — swap the body for a real fetch() on Day 5 integration sync
-  const correct = answers.filter(
-    (a) => ({ q1: 1, q2: 2, q3: 1, q4: 1, q5: 2 } as Record<string, number>)[a.question_id] === a.selected_index
-  ).length;
-  const score = Math.round((correct / answers.length) * 100);
-  return { score, passed: score >= 70, attempt_number: 1 };
-
-  // Real call (uncomment on Day 5):
-  // const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/level/${levelId}/submit`, {
-  //   method: "POST",
-  //   headers: { "Content-Type": "application/json" },
-  //   body: JSON.stringify({ answers }),
-  // });
-  // if (!res.ok) throw new Error(`Gate test submit failed: ${res.status}`);
-  // return res.json();
+  sessionId: string,
+  roadmapId: string,
+  answers: GateAnswerSubmission[]
+): Promise<GateTestSubmitResult> {
+  const res = await fetch(`${BACKEND_URL}/level/${levelId}/submit`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      session_id: sessionId,
+      roadmap_id: roadmapId,
+      answers,
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.detail || `Gate test submit failed: ${res.status}`);
+  }
+  return res.json();
 }

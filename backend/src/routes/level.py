@@ -9,7 +9,7 @@ and returns the score + routing decision.
 from __future__ import annotations
 
 from typing import Any
-
+from src.graph.nodes.gamification import gamification_node
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
@@ -42,6 +42,9 @@ class GateTestResult(BaseModel):
     fail_count: int
     attempt_number: int
     roadmap_locked: bool
+    point_earned: int=0
+    
+    
 
 
 # ── Route ─────────────────────────────────────────────────────────────────────
@@ -160,12 +163,43 @@ async def submit_gate_test(level_id: str, body: GateTestSubmission) -> GateTestR
     if updated_state["roadmap_locked"] and not roadmap_row.data.get("locked", False):
         supabase.table("roadmaps").update({"locked": True}).eq("id", body.roadmap_id).execute()
 
-    # ── Unlock next level if passed ───────────────────────────────────────────
+    points_earned = 0
+
+    # ── Unlock next level if passed, award real points ────────────────────────
     if updated_state["next_action"] == "unlock_next_level":
         next_level_index = current_level + 1
         supabase.table("roadmaps").update(
             {"current_level_index": next_level_index}
         ).eq("id", body.roadmap_id).execute()
+
+        total_levels = len((state.get("roadmap") or {}).get("levels", []))
+        roadmap_now_complete = total_levels > 0 and next_level_index >= total_levels
+
+        # First call deliberately OMITS points/badges/streak_days keys so
+        # gamification_node falls back to its own Supabase load instead of
+        # treating an absent value as a real 0 and skipping the lookup.
+        gam_base_state = {
+            "user_id": session_row.data["user_id"],
+            "roadmap": state["roadmap"],
+            "skill_level": state["skill_level"],
+            "current_level_index": next_level_index,
+            "test_history": updated_state["test_history"],
+            "feature_flags": {"gamification_enabled": True},
+        }
+
+        running_state = await gamification_node({**gam_base_state, "task_type": "level_complete"})
+        points_earned += 50
+
+        if latest_record["attempt_number"] == 1:
+            # Chained from running_state on purpose — it now carries the
+            # real post-award point total, so this call compounds correctly
+            # instead of re-reading a stale pre-award db value.
+            running_state = await gamification_node({**running_state, "task_type": "first_attempt_pass"})
+            points_earned += 25
+
+        if roadmap_now_complete:
+            running_state = await gamification_node({**running_state, "task_type": "roadmap_complete"})
+            points_earned += 200
 
     return GateTestResult(
         score=latest_record["score"],
@@ -174,4 +208,5 @@ async def submit_gate_test(level_id: str, body: GateTestSubmission) -> GateTestR
         fail_count=updated_state["fail_count"],
         attempt_number=latest_record["attempt_number"],
         roadmap_locked=updated_state["roadmap_locked"],
+        points_earned=points_earned,
     )

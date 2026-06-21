@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useRoadmapStream } from "@/lib/hooks/useRoadmapStream";
 
-export default function RoadmapLoadingPage() {
+function LoadingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("session");
@@ -33,16 +33,22 @@ export default function RoadmapLoadingPage() {
       {(phase === "connecting" || phase === "thinking") && (
         <p style={{ color: "var(--color-text-muted)" }}>{thinkingMessage ?? "Connecting..."}</p>
       )}
-
       {(phase === "streaming" || phase === "complete") && (
         <pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", lineHeight: 1.6 }}>
           {tokens}
         </pre>
       )}
-
       {phase === "error" && (
         <p style={{ color: "var(--color-error, #ef4444)" }}>{errorMessage}</p>
       )}
     </div>
+  );
+}
+
+export default function RoadmapLoadingPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: "center" }}>Loading…</div>}>
+      <LoadingContent />
+    </Suspense>
   );
 }

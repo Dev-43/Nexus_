@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Card from "@/components/ui/Card";
 import ProgressBar from "@/components/ui/ProgressBar";
+import { createBrowserClient } from "@supabase/ssr";
 import Button from "@/components/ui/Button";
 import { RoadmapRegenerate } from "@/components/features/RoadmapRegenerate";
 import CompletionOverlay from "@/components/features/CompletionOverlay";
@@ -53,34 +54,56 @@ export default function RoadmapOverviewPage() {
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCompletion, setShowCompletion] = useState(false);
+  const [completionPoints, setCompletionPoints] = useState<number>(LEVEL_COMPLETE_POINTS);
 
   // Trigger overlay via ?complete=true (set by GateTest on final level pass)
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search);
-    if (sp.get("complete") === "true") setShowCompletion(true);
+    if (sp.get("complete") === "true") {
+    setShowCompletion(true);
+    const pts = sp.get("points");
+    if (pts) setCompletionPoints(parseInt(pts, 10));
+  }
   }, []);
 
+  const [userId, setUserId] = useState<string | null>(null);
   useEffect(() => {
-    async function load() {
-      try {
-        const rm = await getRoadmap(roadmapId);
-        setRoadmap(toLocalRoadmap(rm));
-
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserId(user?.id ?? null);
+    });
+  }, []);
+  useEffect(() => {
+  async function load() {
+    try {
+      const rm = await getRoadmap(roadmapId);
+      setRoadmap(toLocalRoadmap(rm));
+ 
+      if (userId) {
         try {
-          const stats = await getUserStats();
+          const stats = await getUserStats(userId);
           setUserStats(stats);
         } catch (statsErr) {
           console.warn("Failed to load user stats, using defaults:", statsErr);
           setUserStats({ points: 0, badges: [], streak_days: 0 });
         }
-      } catch (err) {
-        console.error("Failed to load roadmap:", err);
-      } finally {
-        setLoading(false);
+      } else {
+        // userId hasn't resolved yet (auth check still in flight) —
+        // defaults shown for now; not silently hiding a real failure,
+        // just hasn't had the chance to fetch yet.
+        setUserStats({ points: 0, badges: [], streak_days: 0 });
       }
+    } catch (err) {
+      console.error("Failed to load roadmap:", err);
+    } finally {
+      setLoading(false);
     }
-    load();
-  }, [roadmapId]);
+  }
+  load();
+}, [roadmapId, userId]);
 
   function toLocalRoadmap(apiRoadmap: ApiRoadmap): Roadmap {
     return {
@@ -88,18 +111,23 @@ export default function RoadmapOverviewPage() {
       levels: apiRoadmap.levels.map((level, index) => ({
         ...level,
         completed: index < apiRoadmap.current_level_index,
+        locked: index > apiRoadmap.current_level_index,
       })),
     };
   }
 
   const handleLevelUp = async (nextLevel: string) => {
-    if (!roadmap) return;
-    const session = await startSession({
-      user_id: roadmap.id,
-      skill_name: roadmap.skill_name,
-      skill_level: nextLevel,
-      skip_assessment: true,
-    });
+  if (!roadmap) return;
+  if (!userId) {
+    console.error("Cannot start next level: no authenticated user id available");
+    return;
+  }
+  const session = await startSession({
+    user_id: userId,
+    skill_name: roadmap.skill_name,
+    skill_level: nextLevel,
+    skip_assessment: true,
+  });
   router.push(`/loading?session=${session.session_id}`);
 };
 
@@ -300,7 +328,7 @@ export default function RoadmapOverviewPage() {
         <CompletionOverlay
           skillName={roadmap.skill_name}
           skillLevel={roadmap.skill_level}
-          pointsEarned={LEVEL_COMPLETE_POINTS}
+          pointsEarned={completionPoints}
           totalPoints={userStats?.points ?? LEVEL_COMPLETE_POINTS}
           badgeEarned={badgeEarned}
           onLevelUp={handleLevelUp}

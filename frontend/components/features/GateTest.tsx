@@ -1,10 +1,33 @@
+// ── frontend/components/features/GateTest.tsx ───────────────────────────
+// FULL REPLACEMENT. Changes from the previous version:
+//
+//   1. New required props: sessionId, roadmapId — backend's
+//      GateTestSubmission requires both, component had neither.
+//   2. Answers now include `correct: boolean`, computed from
+//      question.correct_index — matches what level_gate_node actually
+//      reads (a.get("correct", False)). Field renamed selected_index ->
+//      selected_option per the backend's AnswerItem shape (sent as the
+//      option label, e.g. "A"/"B"/"C"/"D", since that's what
+//      selected_option as a string most naturally represents — adjust
+//      if your real backend-generated questions use a different option
+//      identifier scheme).
+//   3. Removed the silent mock-scoring fallback entirely — a failed
+//      submit now surfaces as a visible error, full stop.
+//   4. Reveal state now comes from the backend's `next_action`
+//      ("unlock_next_level" | "partial_retry" | "offer_sublevel"),
+//      not re-derived from a raw score on the client. The node's
+//      retry-vs-fail logic depends on attempt_number, which the client
+//      can't reliably reproduce.
+//   5. Score is displayed as score*100, since the backend returns
+//      0.0-1.0, not a percentage.
+
 "use client";
 
 import { useState } from "react";
 import QuizOption from "@/components/ui/QuizOption";
 import Button from "@/components/ui/Button";
 import ProgressBar from "@/components/ui/ProgressBar";
-import { submitGateTest } from "@/lib/api";
+import { submitGateTest, type GateAnswerSubmission, type GateTestSubmitResult } from "@/lib/api";
 
 export interface GateTestQuestion {
   id: string;
@@ -14,29 +37,24 @@ export interface GateTestQuestion {
   concept_tag?: string;
 }
 
-interface AnswerRecord {
-  question_id: string;
-  selected_index: number;
-  concept_tag?: string;
-}
-
 type RevealState = "pass" | "partial" | "fail";
 
 interface GateTestProps {
   levelId: string;
+  sessionId: string;
+  roadmapId: string;
   questions?: GateTestQuestion[];
-  onResult: (score: number, passed: boolean) => void;
+  onResult: (score: number, passed: boolean,pointsEarned: number) => void;
   /** Called specifically when the fail CTA "View sublevel suggestion" is clicked */
   onSubLevel?: () => void;
 }
 
-const PASS_THRESHOLD = 70;
-const PARTIAL_THRESHOLD = 60;
-
-function getRevealState(score: number): RevealState {
-  if (score >= PASS_THRESHOLD) return "pass";
-  if (score >= PARTIAL_THRESHOLD) return "partial";
-  return "fail";
+// Maps backend next_action directly to the reveal UI state — single
+// source of truth lives on the backend now, not re-derived from score.
+function revealStateFromNextAction(nextAction: string): RevealState {
+  if (nextAction === "unlock_next_level") return "pass";
+  if (nextAction === "partial_retry") return "partial";
+  return "fail"; // offer_sublevel, or any unrecognised value — fail-safe
 }
 
 const MOCK_QUESTIONS: GateTestQuestion[] = [
@@ -93,13 +111,15 @@ const MOCK_QUESTIONS: GateTestQuestion[] = [
 ];
 
 interface RevealProps {
-  score: number;
+  score: number; // 0.0-1.0
   state: RevealState;
   onContinue: () => void;
   onSubLevel?: () => void;
 }
 
 function ScoreReveal({ score, state, onContinue, onSubLevel }: RevealProps) {
+  const displayScore = Math.round(score * 100);
+
   const config = {
     pass: {
       icon: "🏆",
@@ -138,9 +158,9 @@ function ScoreReveal({ score, state, onContinue, onSubLevel }: RevealProps) {
 
   function handleCta() {
     if (state === "fail" && onSubLevel) {
-      onSubLevel(); // show SubLevelModal — stay on this page
+      onSubLevel();
     } else {
-      onContinue(); // pass → next level, partial → retry
+      onContinue();
     }
   }
 
@@ -154,50 +174,31 @@ function ScoreReveal({ score, state, onContinue, onSubLevel }: RevealProps) {
         {config.icon}
       </div>
 
-      <p
-        className="text-6xl font-medium mb-1 leading-none"
-        style={{ color: config.scoreColor }}
-      >
-        {Math.round(score)}%
+      <p className="text-6xl font-medium mb-1 leading-none" style={{ color: config.scoreColor }}>
+        {displayScore}%
       </p>
-      <p className="text-xs tracking-widest uppercase text-secondary mb-3">
-        your score
-      </p>
+      <p className="text-xs tracking-widest uppercase text-secondary mb-3">your score</p>
 
       <p className="text-xl font-medium text-primary mb-2">{config.headline}</p>
-      <p className="text-sm text-secondary leading-relaxed max-w-sm mb-8">
-        {config.sub}
-      </p>
+      <p className="text-sm text-secondary leading-relaxed max-w-sm mb-8">{config.sub}</p>
 
       <div className="w-full max-w-xs mb-8">
-        <div
-          className="h-1.5 rounded-full overflow-hidden mb-1.5"
-          style={{ background: "var(--color-border-tertiary)" }}
-        >
+        <div className="h-1.5 rounded-full overflow-hidden mb-1.5" style={{ background: "var(--color-border-tertiary)" }}>
           <div
             className="h-full rounded-full transition-all duration-700"
-            style={{
-              width: `${Math.round(score)}%`,
-              background: config.barColor,
-            }}
+            style={{ width: `${displayScore}%`, background: config.barColor }}
           />
         </div>
         <div className="flex justify-between text-xs text-tertiary">
           <span>0%</span>
-          <span style={{ color: config.thresholdColor, fontWeight: 500 }}>
-            {config.thresholdLabel}
-          </span>
+          <span style={{ color: config.thresholdColor, fontWeight: 500 }}>{config.thresholdLabel}</span>
           <span>100%</span>
         </div>
       </div>
 
       <div className="flex gap-3 flex-wrap justify-center">
-        <Button variant="primary" onClick={handleCta}>
-          {config.cta}
-        </Button>
-        <Button variant="ghost" onClick={() => window.history.back()}>
-          Back to content
-        </Button>
+        <Button variant="primary" onClick={handleCta}>{config.cta}</Button>
+        <Button variant="ghost" onClick={() => window.history.back()}>Back to content</Button>
       </div>
     </div>
   );
@@ -205,6 +206,8 @@ function ScoreReveal({ score, state, onContinue, onSubLevel }: RevealProps) {
 
 export default function GateTest({
   levelId,
+  sessionId,
+  roadmapId,
   questions = MOCK_QUESTIONS,
   onResult,
   onSubLevel,
@@ -212,15 +215,16 @@ export default function GateTest({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [revealed, setRevealed] = useState(false);
-  const [answers, setAnswers] = useState<AnswerRecord[]>([]);
+  const [answers, setAnswers] = useState<GateAnswerSubmission[]>([]);
   const [revealState, setRevealState] = useState<RevealState | null>(null);
-  const [finalScore, setFinalScore] = useState<number>(0);
+  const [finalScore, setFinalScore] = useState<number>(0); // 0.0-1.0
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [finalPointsEarned, setFinalPointsEarned] = useState<number>(0);
   const question = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
   const progressPercent = (currentIndex / questions.length) * 100;
+  const OPTION_LABELS = ["A", "B", "C", "D"];
 
   function handleSelect(optionIndex: number) {
     if (revealed) return;
@@ -231,9 +235,15 @@ export default function GateTest({
   async function handleNext() {
     if (selectedOption === null) return;
 
-    const record: AnswerRecord = {
+    // correct is computed client-side from correct_index for now — this
+    // matches the backend's actual contract (level_gate_node trusts the
+    // submitted `correct` flag as-is), not a new design decision made
+    // here. Flagged separately as a real grading-integrity gap, not
+    // something this change attempts to fix.
+    const record: GateAnswerSubmission = {
       question_id: question.id,
-      selected_index: selectedOption,
+      selected_option: OPTION_LABELS[selectedOption] ?? String(selectedOption),
+      correct: question.correct_index === selectedOption,
       concept_tag: question.concept_tag,
     };
 
@@ -251,23 +261,17 @@ export default function GateTest({
     setError(null);
 
     try {
-      let score: number;
-      try {
-        const result = await submitGateTest(levelId, nextAnswers);
-        score = result.score;
-      } catch {
-        // Local mock scoring fallback
-        const correct = nextAnswers.filter((a, i) => {
-          const q = questions.find((q) => q.id === a.question_id);
-          return q?.correct_index === a.selected_index;
-        }).length;
-        score = Math.round((correct / questions.length) * 100);
-      }
-
-      const state = getRevealState(score);
-      setFinalScore(score);
-      setRevealState(state);
-    } catch {
+      const result: GateTestSubmitResult = await submitGateTest(
+        levelId,
+        sessionId,
+        roadmapId,
+        nextAnswers
+      );
+      setFinalScore(result.score);
+      setFinalPointsEarned(result.points_earned ?? 0);
+      setRevealState(revealStateFromNextAction(result.next_action));
+    } catch (err) {
+      console.error("Gate test submit failed:", err);
       setError("Something went wrong submitting your answers. Please try again.");
     } finally {
       setSubmitting(false);
@@ -276,12 +280,10 @@ export default function GateTest({
 
   function handleRevealContinue() {
     if (revealState === null) return;
-    onResult(finalScore, revealState === "pass");
+    onResult(finalScore, revealState === "pass", finalPointsEarned);
   }
 
-  function getOptionState(
-    optIndex: number
-  ): "default" | "selected" | "correct" | "wrong" {
+  function getOptionState(optIndex: number): "default" | "selected" | "correct" | "wrong" {
     if (!revealed) {
       return optIndex === selectedOption ? "selected" : "default";
     }
@@ -304,20 +306,15 @@ export default function GateTest({
 
   return (
     <div className="max-w-xl">
-      <ProgressBar
-        value={progressPercent}
-        label={`Question ${currentIndex + 1} of ${questions.length}`}
-      />
+      <ProgressBar value={progressPercent} label={`Question ${currentIndex + 1} of ${questions.length}`} />
 
-      <p className="text-lg font-medium text-primary leading-snug mb-6">
-        {question.text}
-      </p>
+      <p className="text-lg font-medium text-primary leading-snug mb-6">{question.text}</p>
 
       <div className="flex flex-col gap-2.5 mb-8">
         {question.options.map((opt, i) => (
           <QuizOption
             key={i}
-            label={["A", "B", "C", "D"][i]}
+            label={OPTION_LABELS[i]}
             text={opt}
             state={getOptionState(i)}
             onClick={() => handleSelect(i)}
@@ -333,11 +330,7 @@ export default function GateTest({
         disabled={selectedOption === null || submitting}
         loading={submitting}
       >
-        {submitting
-          ? "Submitting…"
-          : isLastQuestion
-          ? "See results"
-          : "Next question →"}
+        {submitting ? "Submitting…" : isLastQuestion ? "See results" : "Next question →"}
       </Button>
     </div>
   );
