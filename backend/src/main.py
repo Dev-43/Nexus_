@@ -11,6 +11,15 @@ FastAPI entry point for the Nexus backend.
 - CORS origins read from settings.ALLOWED_ORIGINS (comma-separated) so the
   Vercel production domain can be added without touching code — Railway env
   var only.
+
+IMPORTANT — production checkpointer.setup():
+.setup() is intentionally NOT called in the production branch below. Tables
+are created once via `uv run python -m scripts.setup_checkpointer`, run
+manually from a local machine. Calling .setup() on every container boot
+causes a psycopg.errors.DuplicatePreparedStatement crash loop under
+Supabase's Supavisor connection pooling. If the checkpoint schema ever
+needs to be recreated, re-run that script manually — do not add .setup()
+back into this lifespan.
 """
 
 from contextlib import asynccontextmanager
@@ -37,18 +46,17 @@ async def lifespan(app: FastAPI):
     checkpointer_ctx = None
 
     if settings.ENV == "production":
-        # Day 6: Supabase Postgres checkpointer using settings.POSTGRES_URL
-        # NOTE: POSTGRES_URL must be the Supabase POOLER url (port 6543),
-        # not the direct connection (5432) — direct connections exhaust
-        # fast under Railway's instance scaling.
+        # Supabase Postgres checkpointer using settings.POSTGRES_URL.
+        # NOTE: POSTGRES_URL must be the Supabase POOLER url (port 6543
+        # for transaction mode, or 5432 for session mode) — not the direct
+        # connection (5432 non-pooled) — direct connections exhaust fast
+        # under Railway's instance scaling.
+        #
+        # .setup() is deliberately NOT called here — see module docstring.
         from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
-        checkpointer_ctx = AsyncPostgresSaver.from_conn_string(
-            settings.POSTGRES_URL,
-            pipeline=False,
-        )
+        checkpointer_ctx = AsyncPostgresSaver.from_conn_string(settings.POSTGRES_URL)
         checkpointer = await checkpointer_ctx.__aenter__()
-        await checkpointer.setup()
     else:
         # Local dev: SQLite checkpointer, state survives restarts
         from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
