@@ -4,7 +4,7 @@
 // To wire up the real backend: replace the `return MOCK_...` line in each
 // function with the `fetch(...)` block shown in the comment above it.
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export type SkillLevel = "beginner" | "intermediate" | "advanced";
 

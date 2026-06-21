@@ -44,9 +44,11 @@ class Settings(BaseSettings):
 
     @property
     def allowed_origins_list(self) -> list[str]:
-        """Split ALLOWED_ORIGINS into a list, stripping whitespace per entry."""
-        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",") if origin.strip()]
-
+        return [
+            origin.strip().rstrip("/")
+            for origin in self.ALLOWED_ORIGINS.split(",")
+            if origin.strip()
+        ]
 
 @lru_cache
 def get_settings() -> Settings:
