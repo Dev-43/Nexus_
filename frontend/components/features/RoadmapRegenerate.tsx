@@ -22,14 +22,15 @@ export function RoadmapRegenerate({
   const [panel, setPanel] = useState<PanelState>("closed");
   const [feedback, setFeedback] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // All hooks must run unconditionally, every render — router is called
+  // here, before any early return, to satisfy react-hooks/rules-of-hooks.
+  const router = useRouter();
 
   // Guard — returns nothing when locked or limit reached
   if (roadmapLocked || regenerationCount >= 2) return null;
 
   const remaining = 2 - regenerationCount;
   const isLastUse = remaining === 1;
-
-  const router = useRouter();
 
   async function handleSubmit() {
     const trimmed = feedback.trim();

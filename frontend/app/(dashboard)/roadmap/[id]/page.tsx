@@ -9,6 +9,7 @@ import Button from "@/components/ui/Button";
 import { RoadmapRegenerate } from "@/components/features/RoadmapRegenerate";
 import CompletionOverlay from "@/components/features/CompletionOverlay";
 import { getRoadmap, getUserStats, startSession, type Roadmap as ApiRoadmap } from "@/lib/api";
+import { getBadgeForLevel } from "@/lib/badges";
 
 interface Level {
   index: number;
@@ -34,14 +35,6 @@ interface UserStats {
   streak_days: number;
 }
 
-function getBadgeForLevel(skillLevel: string): string {
-  const map: Record<string, string> = {
-    beginner: "Bronze",
-    intermediate: "Silver",
-    advanced: "Gold",
-  };
-  return map[skillLevel] ?? "Bronze";
-}
 
 const LEVEL_COMPLETE_POINTS = 200;
 
@@ -339,4 +332,3 @@ export default function RoadmapOverviewPage() {
   );
 }
 
-export { getBadgeForLevel };

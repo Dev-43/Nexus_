@@ -4,7 +4,7 @@
 // Feature 12: Adaptive Assessment Quiz Page
 
 import { useRouter , useSearchParams} from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, Suspense } from "react";
 import styles from "./assessment.module.css";
 
 
@@ -368,7 +368,7 @@ function QuestionCard({
   );
 }
 
-export default function AssessmentPage() {
+function AssessmentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const skillName = searchParams.get("skill") ?? "Python";
@@ -503,5 +503,31 @@ export default function AssessmentPage() {
       </div>
 
     </div>
+  );
+}
+
+function AssessmentFallback() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        background: tokens.bg,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: tokens.textSecondary,
+        fontFamily: "'Inter', 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+      }}
+    >
+      Loading…
+    </div>
+  );
+}
+
+export default function AssessmentPage() {
+  return (
+    <Suspense fallback={<AssessmentFallback />}>
+      <AssessmentPageContent />
+    </Suspense>
   );
 }

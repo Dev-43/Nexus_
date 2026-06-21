@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { QuizOption } from "@/components/ui/QuizOption";
 import { Button } from "@/components/ui/Button";
@@ -74,7 +74,7 @@ const VALUE_MAP: Record<string, string> = {
 };
 
 // ── Component ─────────────────────────────────────────────────
-export default function PersonalityQuizPage() {
+function PersonalityQuizPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   // Matches the ACTUAL pattern used by the assessment page
@@ -411,5 +411,13 @@ export default function PersonalityQuizPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+export default function PersonalityQuizPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", background: "var(--color-bg)" }} />}>
+      <PersonalityQuizPageContent />
+    </Suspense>
   );
 }
