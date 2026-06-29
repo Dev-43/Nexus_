@@ -37,13 +37,3 @@ frontend/next-env.d.ts
 .vscode/
 .idea/
 
-feature4_bootstrap_pnpm.sh
-feature4_fix_route_conflict.sh
-feature4_fix_supabase_ssr.sh
-feature6_install.sh
-feature10_quiz_page.sh
-feature_11_skill_selection.sh
-feature12_install.sh
-setup_feature_21.sh
-install-feature-23.sh
-feature26_install.sh
