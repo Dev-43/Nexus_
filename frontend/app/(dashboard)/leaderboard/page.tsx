@@ -86,9 +86,9 @@ const SAMPLE_LEADERBOARD: LeaderboardUser[] = [
 ];
 
 const TIER_COLORS = {
-  Diamond: { bg: 'rgba(76, 177, 255, 0.15)', text: '#4CB1FF', border: 'rgba(76, 177, 255, 0.4)' },
+  Diamond: { bg: 'rgba(59, 130, 246, 0.15)', text: '#60A5FA', border: 'rgba(59, 130, 246, 0.4)' },
   Gold: { bg: 'rgba(245, 158, 11, 0.15)', text: '#F59E0B', border: 'rgba(245, 158, 11, 0.4)' },
-  Silver: { bg: 'rgba(168, 166, 192, 0.15)', text: '#A8A6C0', border: 'rgba(168, 166, 192, 0.4)' },
+  Silver: { bg: 'rgba(148, 163, 184, 0.15)', text: '#94A3B8', border: 'rgba(148, 163, 184, 0.4)' },
   Bronze: { bg: 'rgba(217, 119, 6, 0.15)', text: '#D97706', border: 'rgba(217, 119, 6, 0.4)' },
 };
 
@@ -143,7 +143,7 @@ export default function LeaderboardPage() {
       <div
         style={{
           minHeight: '100vh',
-          background: '#0D0D12',
+          background: '#000000',
           color: colors.textPrimary,
           padding: '40px 24px',
           fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -168,7 +168,7 @@ export default function LeaderboardPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '6px',
-                  color: '#A8A6C0',
+                  color: '#94A3B8',
                   fontSize: '13px',
                   textDecoration: 'none',
                   marginBottom: '10px',
@@ -176,10 +176,10 @@ export default function LeaderboardPage() {
               >
                 ← Back to Dashboard
               </Link>
-              <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#F0EFFB', margin: 0 }}>
+              <h1 style={{ fontSize: '28px', fontWeight: '700', color: '#F8FAFC', margin: 0 }}>
                 Learner Leaderboard 🏆
               </h1>
-              <p style={{ color: '#A8A6C0', fontSize: '14px', marginTop: '4px' }}>
+              <p style={{ color: '#94A3B8', fontSize: '14px', marginTop: '4px' }}>
                 Track top performers, mastery consistency, and XP rankings across all adaptive roadmaps.
               </p>
             </div>
@@ -188,10 +188,10 @@ export default function LeaderboardPage() {
             <div
               style={{
                 display: 'flex',
-                background: '#16161F',
+                background: '#090A0F',
                 borderRadius: '10px',
                 padding: '4px',
-                border: '1px solid #2A2A40',
+                border: '1px solid #1E2330',
               }}
             >
               {(
@@ -205,8 +205,8 @@ export default function LeaderboardPage() {
                   key={tab.id}
                   onClick={() => setFilter(tab.id)}
                   style={{
-                    background: filter === tab.id ? '#6D5FFD' : 'transparent',
-                    color: filter === tab.id ? '#FFFFFF' : '#A8A6C0',
+                    background: filter === tab.id ? '#3B82F6' : 'transparent',
+                    color: filter === tab.id ? '#FFFFFF' : '#94A3B8',
                     border: 'none',
                     borderRadius: '8px',
                     padding: '8px 14px',
@@ -239,21 +239,22 @@ export default function LeaderboardPage() {
                   style={{
                     background:
                       index === 0
-                        ? 'linear-gradient(180deg, rgba(109, 95, 253, 0.18) 0%, #16161F 100%)'
-                        : '#16161F',
-                    border: index === 0 ? '1px solid #6D5FFD' : '1px solid #2A2A40',
+                        ? 'linear-gradient(180deg, rgba(59, 130, 246, 0.16) 0%, #090A0F 100%)'
+                        : '#090A0F',
+                    border: index === 0 ? '1px solid #3B82F6' : '1px solid #1E2330',
                     borderRadius: '16px',
                     padding: '24px',
                     textAlign: 'center',
                     position: 'relative',
+                    boxShadow: index === 0 ? '0 8px 30px rgba(59, 130, 246, 0.2)' : '0 4px 14px rgba(0,0,0,0.5)',
                   }}
                 >
-                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#6D5FFD', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: index === 0 ? '#60A5FA' : '#94A3B8', marginBottom: '8px' }}>
                     {medals[index]}
                   </div>
                   <div style={{ fontSize: '36px', marginBottom: '8px' }}>{item.avatar}</div>
-                  <div style={{ fontSize: '18px', fontWeight: '700', color: '#F0EFFB' }}>{item.name}</div>
-                  <div style={{ fontSize: '12px', color: '#A8A6C0', marginTop: '2px' }}>
+                  <div style={{ fontSize: '18px', fontWeight: '700', color: '#F8FAFC' }}>{item.name}</div>
+                  <div style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
                     {item.skills.join(' · ')}
                   </div>
                   <div
@@ -268,8 +269,9 @@ export default function LeaderboardPage() {
                       style={{
                         fontSize: '14px',
                         fontWeight: '700',
-                        color: '#4CB1FF',
-                        background: 'rgba(76, 177, 255, 0.1)',
+                        color: '#60A5FA',
+                        background: 'rgba(59, 130, 246, 0.12)',
+                        border: '1px solid rgba(59, 130, 246, 0.3)',
                         padding: '4px 10px',
                         borderRadius: '6px',
                       }}
@@ -281,7 +283,8 @@ export default function LeaderboardPage() {
                         fontSize: '14px',
                         fontWeight: '700',
                         color: '#F59E0B',
-                        background: 'rgba(245, 158, 11, 0.1)',
+                        background: 'rgba(245, 158, 11, 0.12)',
+                        border: '1px solid rgba(245, 158, 11, 0.3)',
                         padding: '4px 10px',
                         borderRadius: '6px',
                       }}
@@ -297,10 +300,11 @@ export default function LeaderboardPage() {
           {/* Full Standings List */}
           <div
             style={{
-              background: '#16161F',
+              background: '#090A0F',
               borderRadius: '16px',
-              border: '1px solid #2A2A40',
+              border: '1px solid #1E2330',
               overflow: 'hidden',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
             }}
           >
             <div
@@ -308,11 +312,11 @@ export default function LeaderboardPage() {
                 display: 'grid',
                 gridTemplateColumns: '60px 1fr 140px 120px 110px',
                 padding: '16px 20px',
-                background: '#1A1A26',
-                borderBottom: '1px solid #2A2A40',
+                background: '#121520',
+                borderBottom: '1px solid #1E2330',
                 fontSize: '12px',
                 fontWeight: 600,
-                color: '#A8A6C0',
+                color: '#94A3B8',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
               }}
@@ -333,18 +337,18 @@ export default function LeaderboardPage() {
                     display: 'grid',
                     gridTemplateColumns: '60px 1fr 140px 120px 110px',
                     padding: '16px 20px',
-                    borderBottom: index < sortedBoard.length - 1 ? '1px solid #222234' : 'none',
+                    borderBottom: index < sortedBoard.length - 1 ? '1px solid #161A24' : 'none',
                     alignItems: 'center',
-                    background: item.isCurrentUser ? 'rgba(109, 95, 253, 0.12)' : 'transparent',
+                    background: item.isCurrentUser ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                   }}
                 >
-                  <span style={{ fontWeight: '700', color: index < 3 ? '#6D5FFD' : '#A8A6C0', fontSize: '15px' }}>
+                  <span style={{ fontWeight: '700', color: index < 3 ? '#60A5FA' : '#94A3B8', fontSize: '15px' }}>
                     #{index + 1}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ fontSize: '20px' }}>{item.avatar}</span>
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#F0EFFB' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: '#F8FAFC' }}>
                         {item.name}
                         {item.isCurrentUser && (
                           <span
@@ -352,16 +356,17 @@ export default function LeaderboardPage() {
                               marginLeft: '8px',
                               fontSize: '10px',
                               padding: '2px 6px',
-                              background: '#6D5FFD',
+                              background: '#3B82F6',
                               borderRadius: '4px',
                               color: '#FFFFFF',
+                              fontWeight: 700,
                             }}
                           >
                             YOU
                           </span>
                         )}
                       </div>
-                      <div style={{ fontSize: '12px', color: '#A8A6C0' }}>{item.skills.join(' · ')}</div>
+                      <div style={{ fontSize: '12px', color: '#94A3B8' }}>{item.skills.join(' · ')}</div>
                     </div>
                   </div>
                   <div>
@@ -386,7 +391,7 @@ export default function LeaderboardPage() {
                     style={{
                       fontSize: '14px',
                       fontWeight: '700',
-                      color: '#F0EFFB',
+                      color: '#F8FAFC',
                       textAlign: 'right',
                     }}
                   >

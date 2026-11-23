@@ -18,10 +18,10 @@ interface ProgressBarProps {
 }
 
 const gradients = {
-  default: "linear-gradient(90deg, #4CB1FF 0%, #9C7BAC 50%, #7CB078 100%)",
-  success: "linear-gradient(90deg, #5A9456 0%, #7CB078 100%)",
-  warn:    "linear-gradient(90deg, #D46317 0%, #FF7F2D 100%)",
-  danger:  "linear-gradient(90deg, #CC1E3D 0%, #FF4F6D 100%)",
+  default: "linear-gradient(90deg, #2563EB 0%, #3B82F6 100%)",
+  success: "linear-gradient(90deg, #059669 0%, #10B981 100%)",
+  warn:    "linear-gradient(90deg, #D97706 0%, #F59E0B 100%)",
+  danger:  "linear-gradient(90deg, #DC2626 0%, #EF4444 100%)",
 };
 
 const heights = { xs: 3, sm: 5, md: 8, lg: 12 };
@@ -62,7 +62,7 @@ export function ProgressBar({ value, max = 100, variant = "default", size = "sm"
           backgroundSize: striped ? "24px 100%" : "auto",
           animation: striped ? "nexus-stripe 1s linear infinite" : "none",
           transition: animated ? "width 0.7s cubic-bezier(0.22, 1, 0.36, 1)" : "none",
-          boxShadow: pct > 0 ? "0 0 8px rgba(108,99,255,0.35)" : "none",
+          boxShadow: pct > 0 ? "0 0 10px rgba(59, 130, 246, 0.4)" : "none",
         }} />
       </div>
     </div>

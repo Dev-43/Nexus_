@@ -65,8 +65,8 @@ function CompletionContent() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#0D0D12',
-        color: '#F0EFFB',
+        background: '#000000',
+        color: '#F8FAFC',
         padding: '48px 24px',
         fontFamily: 'system-ui, -apple-system, sans-serif',
       }}
@@ -78,14 +78,14 @@ function CompletionContent() {
             width: '88px',
             height: '88px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, rgba(109, 95, 253, 0.3) 0%, rgba(76, 177, 255, 0.3) 100%)',
-            border: '2px solid #6D5FFD',
+            background: 'rgba(59, 130, 246, 0.12)',
+            border: '2px solid #3B82F6',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: '44px',
             margin: '0 auto 24px',
-            boxShadow: '0 0 30px rgba(109, 95, 253, 0.4)',
+            boxShadow: '0 0 35px rgba(59, 130, 246, 0.3)',
           }}
         >
           🎓
@@ -107,23 +107,23 @@ function CompletionContent() {
           Roadmap Completed
         </span>
 
-        <h1 style={{ fontSize: '36px', fontWeight: 800, marginTop: '16px', marginBottom: '8px' }}>
+        <h1 style={{ fontSize: '36px', fontWeight: 800, marginTop: '16px', marginBottom: '8px', color: '#F8FAFC' }}>
           Congratulations, {userName}!
         </h1>
-        <p style={{ color: '#A8A6C0', fontSize: '16px', maxWidth: '560px', margin: '0 auto 36px' }}>
-          You have successfully mastered the <strong style={{ color: '#F0EFFB' }}>{skillName}</strong> roadmap,
+        <p style={{ color: '#94A3B8', fontSize: '16px', maxWidth: '560px', margin: '0 auto 36px' }}>
+          You have successfully mastered the <strong style={{ color: '#F8FAFC' }}>{skillName}</strong> roadmap,
           passed all level gate tests, and earned your verified credential.
         </p>
 
         {/* Certificate Card */}
         <Card
           style={{
-            background: 'linear-gradient(180deg, #16161F 0%, #12121A 100%)',
-            border: '1px solid #2A2A40',
+            background: '#090A0F',
+            border: '1px solid #1E2330',
             borderRadius: '20px',
             padding: '36px 32px',
             marginBottom: '40px',
-            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4)',
+            boxShadow: '0 16px 48px rgba(0, 0, 0, 0.7)',
             textAlign: 'left',
             position: 'relative',
           }}
@@ -133,7 +133,7 @@ function CompletionContent() {
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-start',
-              borderBottom: '1px solid #2A2A40',
+              borderBottom: '1px solid #1E2330',
               paddingBottom: '24px',
               marginBottom: '24px',
               flexWrap: 'wrap',
@@ -141,13 +141,13 @@ function CompletionContent() {
             }}
           >
             <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#6D5FFD', letterSpacing: '0.1em' }}>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: '#3B82F6', letterSpacing: '0.1em' }}>
                 NEXUS ADAPTIVE LEARNING
               </div>
-              <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#F0EFFB', margin: '4px 0' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: 700, color: '#F8FAFC', margin: '4px 0' }}>
                 Certificate of Skill Mastery
               </h2>
-              <div style={{ fontSize: '13px', color: '#A8A6C0' }}>Verified Credential ID: NEX-{Math.random().toString(36).substring(2, 9).toUpperCase()}</div>
+              <div style={{ fontSize: '13px', color: '#94A3B8' }}>Verified Credential ID: NEX-{Math.random().toString(36).substring(2, 9).toUpperCase()}</div>
             </div>
             <div
               style={{
@@ -169,33 +169,33 @@ function CompletionContent() {
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
               gap: '16px',
-              background: '#0D0D12',
+              background: '#050608',
               borderRadius: '12px',
               padding: '20px',
-              border: '1px solid #222234',
+              border: '1px solid #1E2330',
             }}
           >
             <div>
-              <div style={{ fontSize: '12px', color: '#A8A6C0' }}>Skill Track</div>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: '#F0EFFB', marginTop: '2px' }}>
+              <div style={{ fontSize: '12px', color: '#94A3B8' }}>Skill Track</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC', marginTop: '2px' }}>
                 {skillName}
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '12px', color: '#A8A6C0' }}>Total XP Earned</div>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: '#4CB1FF', marginTop: '2px' }}>
+              <div style={{ fontSize: '12px', color: '#94A3B8' }}>Total XP Earned</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#F59E0B', marginTop: '2px' }}>
                 +{totalXp} XP
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '12px', color: '#A8A6C0' }}>Gate Accuracy</div>
+              <div style={{ fontSize: '12px', color: '#94A3B8' }}>Gate Accuracy</div>
               <div style={{ fontSize: '15px', fontWeight: 700, color: '#10B981', marginTop: '2px' }}>
                 100% Passed
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '12px', color: '#A8A6C0' }}>Issue Date</div>
-              <div style={{ fontSize: '15px', fontWeight: 700, color: '#F0EFFB', marginTop: '2px' }}>
+              <div style={{ fontSize: '12px', color: '#94A3B8' }}>Issue Date</div>
+              <div style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC', marginTop: '2px' }}>
                 {new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
               </div>
             </div>
@@ -204,7 +204,7 @@ function CompletionContent() {
 
         {/* Recommended Next Roadmaps */}
         <div style={{ textAlign: 'left', marginBottom: '36px' }}>
-          <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#F0EFFB', marginBottom: '16px' }}>
+          <h3 style={{ fontSize: '20px', fontWeight: 700, color: '#F8FAFC', marginBottom: '16px' }}>
             Recommended Next Skills 🚀
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '16px' }}>
@@ -212,28 +212,29 @@ function CompletionContent() {
               <Card
                 key={item.title}
                 style={{
-                  background: '#16161F',
-                  border: '1px solid #2A2A40',
+                  background: '#090A0F',
+                  border: '1px solid #1E2330',
                   borderRadius: '14px',
                   padding: '20px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
+                  boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
                 }}
               >
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: '#6D5FFD', background: 'rgba(109, 95, 253, 0.1)', padding: '2px 8px', borderRadius: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#3B82F6', background: 'rgba(59, 130, 246, 0.12)', padding: '2px 8px', borderRadius: '4px' }}>
                       {item.badge}
                     </span>
-                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#4CB1FF' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#F59E0B' }}>
                       {item.xp}
                     </span>
                   </div>
-                  <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#F0EFFB', margin: '4px 0 6px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: 700, color: '#F8FAFC', margin: '4px 0 6px' }}>
                     {item.title}
                   </h4>
-                  <p style={{ fontSize: '13px', color: '#A8A6C0', margin: 0, lineHeight: 1.4 }}>
+                  <p style={{ fontSize: '13px', color: '#94A3B8', margin: 0, lineHeight: 1.4 }}>
                     {item.desc}
                   </p>
                 </div>

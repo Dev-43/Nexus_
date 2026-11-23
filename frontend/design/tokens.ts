@@ -1,54 +1,56 @@
 // ============================================================
 // Nexus Design Tokens
-// Single source of truth — every component imports from here.
-// Never use ad-hoc Tailwind color/spacing classes anywhere.
+// Single source of truth — true black OLED background with
+// vibrant, purposeful accents (no harsh neon, no generic AI slop).
 // ============================================================
 
 export const colors = {
   // Backgrounds - TRUE BLACK OLED PALETTE
-  bg:           "#000000",   // true pure black background
-  surface:      "#080A0E",   // card / panel base
-  surfaceRaised:"#11141D",   // elevated card, modal, active state
-  surfaceLocked:"#040507",   // locked level card bg
+  bg:            "#000000",   // true pure black background
+  surface:       "#090A0F",   // card / panel base
+  surfaceRaised: "#121520",   // elevated card, modal, active state
+  surfaceLocked: "#050608",   // locked level card bg
 
-  // Brand from User Palette (#4CB1FF, #9C7BAC, #FF7F2D, #7CB078, #D0E6FF, #4A4B4B)
-  brand:        "#4CB1FF",   // vibrant cyan-blue — primary actions, active states
-  brandDim:     "#153C5C",   // brand pressed / active bg
-  brandGlow:    "rgba(76, 177, 255, 0.28)", // cyan-blue glow shadow
+  // Brand - Vivid Electric Cobalt (high-contrast, purposeful)
+  brand:         "#3B82F6",   // vivid royal blue — primary actions, active states
+  brandHover:    "#2563EB",   // focused/hover blue
+  brandDim:      "rgba(59, 130, 246, 0.14)", // brand pressed / active bg
+  brandGlow:     "rgba(59, 130, 246, 0.28)", // crisp glow shadow
 
-  // Accents from Palette
-  accentPurple: "#9C7BAC",   // orchid lavender
-  accentOrange: "#FF7F2D",   // vibrant orange
-  accentSage:   "#7CB078",   // sage green
-  accentIce:    "#D0E6FF",   // ice blue highlight
-  accentSlate:  "#4A4B4B",   // dark charcoal / slate
+  // Vibrant Accents (Tasteful & Distinct)
+  accentPurple:  "#8B5CF6",   // regal iris / deep violet
+  accentOrange:  "#F59E0B",   // warm radiant amber (streaks, xp)
+  accentEmerald: "#10B981",   // clean botanical emerald (pass, verified)
+  accentCyan:    "#06B6D4",   // electric azure highlight
+  accentSlate:   "#334155",   // crisp dark slate
 
   // Semantic
-  success:      "#7CB078",   // sage green — pass, correct, complete
-  successDim:   "rgba(124, 176, 120, 0.18)",
-  warn:         "#FF7F2D",   // orange — partial credit, caution
-  warnDim:      "rgba(255, 127, 45, 0.18)",
-  danger:       "#FF4F6D",   // fail, wrong, error
-  dangerDim:    "rgba(255, 79, 109, 0.16)",
+  success:       "#10B981",   // emerald — pass, correct, complete
+  successDim:    "rgba(16, 185, 129, 0.14)",
+  warn:          "#F59E0B",   // warm amber — partial credit, caution
+  warnDim:       "rgba(245, 158, 11, 0.14)",
+  danger:        "#EF4444",   // vivid ruby — fail, wrong, error
+  dangerDim:     "rgba(239, 68, 68, 0.14)",
 
   // Text
-  textPrimary:  "#F2F8FC",   // crisp cool white from user palette
-  textSecondary:"#9EAABF",   // soft readable slate
-  textMuted:    "#556073",
-  textInverse:  "#000000",   // true black text on light buttons
+  textPrimary:   "#F8FAFC",   // crisp, clean white on true black
+  textSecondary: "#94A3B8",   // sophisticated readable slate
+  textMuted:     "#64748B",   // subtle tertiary
+  textInverse:   "#000000",   // true black text on light buttons
 
-  // Border
-  border:       "#1F2430",
-  borderFocus:  "#4CB1FF",
-  borderSlate:  "#4A4B4B",
+  // Borders
+  border:        "#1E2330",
+  borderSubtle:  "rgba(255, 255, 255, 0.08)",
+  borderFocus:   "#3B82F6",
+  borderSlate:   "#334155",
 
-  // Badge tier colors (mapped to palette)
+  // Badge tier colors
   badge: {
-    bronze:  { bg: "#2A180E", accent: "#FF7F2D", text: "#FEF6F4" },
-    silver:  { bg: "#161D24", accent: "#D0E6FF", text: "#F2F8FC" },
-    gold:    { bg: "#281E10", accent: "#FF7F2D", text: "#FFECAA" },
-    diamond: { bg: "#0D2132", accent: "#4CB1FF", text: "#D0E6FF" },
-    purple:  { bg: "#231828", accent: "#9C7BAC", text: "#F5F6FC" },
+    bronze:  { bg: "rgba(217, 119, 6, 0.14)", accent: "#D97706", text: "#FDE68A" },
+    silver:  { bg: "rgba(148, 163, 184, 0.14)", accent: "#94A3B8", text: "#F1F5F9" },
+    gold:    { bg: "rgba(245, 158, 11, 0.14)", accent: "#F59E0B", text: "#FEF08A" },
+    diamond: { bg: "rgba(59, 130, 246, 0.14)", accent: "#3B82F6", text: "#BAE6FD" },
+    purple:  { bg: "rgba(139, 92, 246, 0.14)", accent: "#8B5CF6", text: "#DDD6FE" },
   },
 } as const;
 

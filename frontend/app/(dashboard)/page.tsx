@@ -247,18 +247,26 @@ export default function DashboardPage() {
       {/* ── Top bar ── */}
       <div style={styles.topBar}>
         <div>
-          <h1 style={styles.h1}>Your skills</h1>
+          <h1 style={styles.h1}>Your Learning Hub</h1>
           <p style={styles.subtext}>
-            {active.length} active · {completed.length} completed
+            {active.length} active roadmaps · {completed.length} mastered
           </p>
         </div>
-        <Button
-          variant="secondary"
-          onClick={() => router.push("/skill")}
-          aria-label="Add a new skill"
-        >
-          + Add skill
-        </Button>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <Link href="/leaderboard" style={{ textDecoration: "none" }}>
+            <Button variant="secondary" size="sm">
+              🏆 Leaderboard
+            </Button>
+          </Link>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => router.push("/skill")}
+            aria-label="Add a new skill"
+          >
+            + Add skill
+          </Button>
+        </div>
       </div>
 
       {/* ── Stats row ── */}
@@ -475,60 +483,68 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: "2rem",
   },
   statCard: {
-    background: tokens.colors.surfaceSecondary,
+    background: "#090A0F",
+    border: "1px solid #1E2330",
     borderRadius: tokens.radii.md,
-    padding: "1rem",
+    padding: "1rem 1.25rem",
+    boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
   },
   statLabel: {
-    fontSize: 13,
+    fontSize: 12,
+    fontWeight: 600,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.06em",
     color: tokens.colors.textSecondary,
-    margin: "0 0 4px",
+    margin: "0 0 6px",
   },
   statValue: {
-    fontSize: 22,
-    fontWeight: 500,
+    fontSize: 24,
+    fontWeight: 700,
     color: tokens.colors.textPrimary,
     margin: 0,
+    fontFamily: "var(--font-display)",
   },
   statSub: {
     fontSize: 12,
     color: tokens.colors.textSecondary,
-    margin: "2px 0 0",
+    margin: "4px 0 0",
   },
   sectionLabel: {
     fontSize: 12,
-    fontWeight: 500,
+    fontWeight: 600,
     color: tokens.colors.textSecondary,
     letterSpacing: "0.08em",
     textTransform: "uppercase" as const,
-    margin: "0 0 12px",
+    margin: "0 0 14px",
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-    gap: 12,
+    gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+    gap: 16,
     marginBottom: "2rem",
   },
   card: {
-    background: tokens.colors.surface,
-    border: `0.5px solid ${tokens.colors.border}`,
+    background: "#090A0F",
+    border: "1px solid #1E2330",
     borderRadius: tokens.radii.lg,
-    padding: "1rem 1.25rem",
+    padding: "1.25rem",
     cursor: "pointer",
     position: "relative" as const,
-    transition: "border-color 0.15s",
+    transition: "border-color 0.15s, box-shadow 0.15s, transform 0.15s",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
   },
   focusBadge: {
     position: "absolute" as const,
     top: -1,
     left: 16,
     fontSize: 10,
-    fontWeight: 500,
-    background: tokens.colors.purple,
-    color: "#EEEDFE",
-    padding: "2px 8px",
+    fontWeight: 700,
+    background: "#3B82F6",
+    color: "#FFFFFF",
+    padding: "3px 10px",
     borderRadius: "0 0 6px 6px",
-    letterSpacing: "0.05em",
+    letterSpacing: "0.06em",
+    textTransform: "uppercase" as const,
   },
   cardHeader: {
     display: "flex",
@@ -537,10 +553,11 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 12,
   },
   skillName: {
-    fontSize: 15,
-    fontWeight: 500,
+    fontSize: 16,
+    fontWeight: 600,
     color: tokens.colors.textPrimary,
     margin: "0 0 2px",
+    fontFamily: "var(--font-display)",
   },
   skillMeta: {
     fontSize: 12,
@@ -554,21 +571,22 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 2,
     fontSize: 16,
     lineHeight: 1,
+    opacity: 0.8,
   },
   cardFooter: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    marginTop: 12,
-    paddingTop: 10,
-    borderTop: `0.5px solid ${tokens.colors.border}`,
+    marginTop: 14,
+    paddingTop: 12,
+    borderTop: "1px solid #1E2330",
   },
   xpBadge: {
     fontSize: 12,
-    fontWeight: 600,
-    color: "#4CB1FF",
-    background: "rgba(76, 177, 255, 0.12)",
-    border: "1px solid rgba(76, 177, 255, 0.28)",
+    fontWeight: 700,
+    color: "#F59E0B",
+    background: "rgba(245, 158, 11, 0.12)",
+    border: "1px solid rgba(245, 158, 11, 0.28)",
     padding: "3px 10px",
     borderRadius: 20,
     letterSpacing: "0.02em",
@@ -581,27 +599,28 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: "0.02em",
   },
   statusActive: {
-    background: "rgba(76, 177, 255, 0.14)",
-    color: "#D0E6FF",
-    border: "1px solid rgba(76, 177, 255, 0.35)",
+    background: "rgba(59, 130, 246, 0.12)",
+    color: "#60A5FA",
+    border: "1px solid rgba(59, 130, 246, 0.28)",
   },
   statusPaused: {
-    background: "rgba(255, 127, 45, 0.14)",
-    color: "#FF7F2D",
-    border: "1px solid rgba(255, 127, 45, 0.35)",
+    background: "rgba(245, 158, 11, 0.12)",
+    color: "#F59E0B",
+    border: "1px solid rgba(245, 158, 11, 0.28)",
   },
   statusCompleted: {
-    background: "rgba(124, 176, 120, 0.16)",
-    color: "#7CB078",
-    border: "1px solid rgba(124, 176, 120, 0.35)",
+    background: "rgba(16, 185, 129, 0.12)",
+    color: "#10B981",
+    border: "1px solid rgba(16, 185, 129, 0.28)",
   },
   emptySection: {
-    padding: "1.5rem",
-    border: `0.5px dashed ${tokens.colors.border}`,
+    padding: "2rem",
+    border: "1px dashed #1E2330",
     borderRadius: tokens.radii.lg,
     textAlign: "center" as const,
     color: tokens.colors.textSecondary,
     fontSize: 14,
     marginBottom: "2rem",
+    background: "#050608",
   },
 };

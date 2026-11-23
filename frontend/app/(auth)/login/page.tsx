@@ -66,15 +66,15 @@ export default function LoginPage() {
         {/* Logo mark */}
         <div style={styles.logoMark} aria-hidden>
           <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <rect width="40" height="40" rx="10" fill="#6D5FFD" fillOpacity="0.15" />
+            <rect width="40" height="40" rx="10" fill="#3B82F6" fillOpacity="0.15" />
             <path
               d="M20 8L32 14V22C32 28.627 26.627 34 20 34C13.373 34 8 28.627 8 22V14L20 8Z"
-              stroke="#6D5FFD"
+              stroke="#3B82F6"
               strokeWidth="1.5"
               fill="none"
             />
-            <circle cx="20" cy="22" r="5" fill="#6D5FFD" fillOpacity="0.8" />
-            <circle cx="20" cy="22" r="2.5" fill="#A78BFA" />
+            <circle cx="20" cy="22" r="5" fill="#3B82F6" fillOpacity="0.8" />
+            <circle cx="20" cy="22" r="2.5" fill="#60A5FA" />
           </svg>
         </div>
 
@@ -147,7 +147,7 @@ function GoogleIcon() {
 const styles: Record<string, React.CSSProperties> = {
   page: {
     minHeight: '100vh',
-    background: '#0D0D12',
+    background: '#000000',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
@@ -160,8 +160,8 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'absolute',
     inset: 0,
     backgroundImage: `
-      linear-gradient(rgba(109,95,253,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(109,95,253,0.04) 1px, transparent 1px)
+      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px)
     `,
     backgroundSize: '48px 48px',
     pointerEvents: 'none',
@@ -173,22 +173,22 @@ const styles: Record<string, React.CSSProperties> = {
     transform: 'translateX(-50%)',
     width: '600px',
     height: '400px',
-    background: 'radial-gradient(ellipse, rgba(109,95,253,0.12) 0%, transparent 70%)',
+    background: 'radial-gradient(ellipse, rgba(59,130,246,0.14) 0%, transparent 70%)',
     pointerEvents: 'none',
   },
   card: {
     position: 'relative',
     width: '100%',
     maxWidth: '400px',
-    background: '#16161F',
-    border: '1px solid #2A2A40',
+    background: '#090A0F',
+    border: '1px solid #1E2330',
     borderRadius: '20px',
     padding: '40px 36px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     gap: '16px',
-    boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+    boxShadow: '0 24px 64px rgba(0,0,0,0.85)',
   },
   logoMark: {
     animation: 'float 3s ease-in-out infinite',
@@ -196,35 +196,35 @@ const styles: Record<string, React.CSSProperties> = {
   wordmark: {
     fontSize: '28px',
     fontWeight: '700',
-    color: '#F0EFFB',
+    color: '#F8FAFC',
     letterSpacing: '-0.5px',
     marginTop: '-4px',
   },
   tagline: {
     fontSize: '13px',
-    fontWeight: '500',
-    color: '#A78BFA',
-    letterSpacing: '0.04em',
+    fontWeight: '600',
+    color: '#3B82F6',
+    letterSpacing: '0.06em',
     textTransform: 'uppercase',
     marginTop: '-8px',
   },
   divider: {
     width: '100%',
     height: '1px',
-    background: '#2A2A40',
+    background: '#1E2330',
     margin: '4px 0',
   },
   body: {
     fontSize: '14px',
     lineHeight: '1.6',
-    color: '#A8A6C0',
+    color: '#94A3B8',
     textAlign: 'center',
   },
   errorBox: {
     width: '100%',
     padding: '12px 16px',
-    background: 'rgba(248,113,113,0.1)',
-    border: '1px solid rgba(248,113,113,0.3)',
+    background: 'rgba(239,68,68,0.1)',
+    border: '1px solid rgba(239,68,68,0.3)',
     borderRadius: '8px',
     fontSize: '13px',
     color: '#F87171',
@@ -237,8 +237,8 @@ const styles: Record<string, React.CSSProperties> = {
     justifyContent: 'center',
     gap: '10px',
     padding: '13px 20px',
-    background: '#F0EFFB',
-    color: '#0D0D12',
+    background: '#F8FAFC',
+    color: '#000000',
     border: 'none',
     borderRadius: '10px',
     fontSize: '15px',
@@ -248,7 +248,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   footnote: {
     fontSize: '11px',
-    color: '#4A4A6A',
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: '1.6',
   },
@@ -256,16 +256,16 @@ const styles: Record<string, React.CSSProperties> = {
     width: '32px',
     height: '32px',
     borderRadius: '50%',
-    border: '2px solid #2A2A40',
-    borderTopColor: '#6D5FFD',
+    border: '2px solid #1E2330',
+    borderTopColor: '#3B82F6',
     animation: 'spin 0.8s linear infinite',
   },
   buttonSpinner: {
     width: '16px',
     height: '16px',
     borderRadius: '50%',
-    border: '2px solid rgba(13,13,18,0.2)',
-    borderTopColor: '#0D0D12',
+    border: '2px solid rgba(0,0,0,0.2)',
+    borderTopColor: '#000000',
     animation: 'spin 0.8s linear infinite',
     flexShrink: 0,
   },
@@ -279,12 +279,12 @@ const styles: Record<string, React.CSSProperties> = {
   },
   pill: {
     padding: '5px 12px',
-    background: 'rgba(109,95,253,0.08)',
-    border: '1px solid rgba(109,95,253,0.2)',
+    background: 'rgba(59,130,246,0.1)',
+    border: '1px solid rgba(59,130,246,0.25)',
     borderRadius: '9999px',
     fontSize: '11px',
-    color: '#A78BFA',
-    fontWeight: '500',
+    color: '#60A5FA',
+    fontWeight: '600',
   },
 };
 

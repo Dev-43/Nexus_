@@ -14,8 +14,8 @@ interface QuizOptionProps {
 
 const stateConfig = {
   default:  { bg: "var(--color-surface)",       border: "var(--color-border)",   labelBg: "var(--color-surface-raised)", labelColor: "var(--color-text-secondary)", textColor: "var(--color-text-primary)", cursor: "pointer",    icon: null },
-  selected: { bg: "rgba(108,99,255,0.08)",       border: "var(--color-brand)",    labelBg: "var(--color-brand)",          labelColor: "#fff",                        textColor: "var(--color-text-primary)", cursor: "pointer",    icon: null },
-  correct:  { bg: "var(--color-success-dim)",    border: "var(--color-success)",  labelBg: "var(--color-success)",        labelColor: "#0A0E1A",                     textColor: "var(--color-success)",      cursor: "default",    icon: "✓" },
+  selected: { bg: "var(--color-brand-dim)",     border: "var(--color-brand)",    labelBg: "var(--color-brand)",          labelColor: "#fff",                        textColor: "var(--color-text-primary)", cursor: "pointer",    icon: null },
+  correct:  { bg: "var(--color-success-dim)",    border: "var(--color-success)",  labelBg: "var(--color-success)",        labelColor: "#000000",                     textColor: "var(--color-success)",      cursor: "default",    icon: "✓" },
   wrong:    { bg: "var(--color-danger-dim)",     border: "var(--color-danger)",   labelBg: "var(--color-danger)",         labelColor: "#fff",                        textColor: "var(--color-danger)",       cursor: "default",    icon: "✕" },
   disabled: { bg: "var(--color-surface)",        border: "var(--color-border)",   labelBg: "var(--color-surface-raised)", labelColor: "var(--color-text-muted)",     textColor: "var(--color-text-muted)",   cursor: "not-allowed",icon: null },
 };
@@ -31,8 +31,8 @@ export function QuizOption({ label, text, state = "default", onClick, style }: Q
       style={{
         display: "flex", alignItems: "center", gap: "14px",
         padding: "14px 16px", borderRadius: "var(--radius-md)",
-        background: hovered && isClickable ? "rgba(108,99,255,0.06)" : cfg.bg,
-        border: `1.5px solid ${hovered && isClickable && state === "default" ? "rgba(108,99,255,0.5)" : cfg.border}`,
+        background: hovered && isClickable ? "var(--color-brand-dim)" : cfg.bg,
+        border: `1.5px solid ${hovered && isClickable && state === "default" ? "var(--color-brand)" : cfg.border}`,
         cursor: cfg.cursor,
         transform: hovered && isClickable ? "translateX(3px)" : "none",
         transition: "background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast)",
