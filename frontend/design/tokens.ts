@@ -5,41 +5,50 @@
 // ============================================================
 
 export const colors = {
-  // Backgrounds
-  bg:           "#0A0E1A",   // page background
-  surface:      "#121828",   // card / panel base
-  surfaceRaised:"#1C2438",   // elevated card, modal
-  surfaceLocked:"#0E1220",   // locked level card bg
+  // Backgrounds - TRUE BLACK OLED PALETTE
+  bg:           "#000000",   // true pure black background
+  surface:      "#080A0E",   // card / panel base
+  surfaceRaised:"#11141D",   // elevated card, modal, active state
+  surfaceLocked:"#040507",   // locked level card bg
 
-  // Brand
-  brand:        "#6C63FF",   // electric violet — primary actions, active states
-  brandDim:     "#3D38B0",   // brand pressed / active bg
-  brandGlow:    "rgba(108, 99, 255, 0.18)", // glow shadow
+  // Brand from User Palette (#4CB1FF, #9C7BAC, #FF7F2D, #7CB078, #D0E6FF, #4A4B4B)
+  brand:        "#4CB1FF",   // vibrant cyan-blue — primary actions, active states
+  brandDim:     "#153C5C",   // brand pressed / active bg
+  brandGlow:    "rgba(76, 177, 255, 0.28)", // cyan-blue glow shadow
+
+  // Accents from Palette
+  accentPurple: "#9C7BAC",   // orchid lavender
+  accentOrange: "#FF7F2D",   // vibrant orange
+  accentSage:   "#7CB078",   // sage green
+  accentIce:    "#D0E6FF",   // ice blue highlight
+  accentSlate:  "#4A4B4B",   // dark charcoal / slate
 
   // Semantic
-  success:      "#2DD4A0",   // pass, correct, complete
-  successDim:   "rgba(45, 212, 160, 0.12)",
-  warn:         "#F5A623",   // partial credit, caution
-  warnDim:      "rgba(245, 166, 35, 0.12)",
+  success:      "#7CB078",   // sage green — pass, correct, complete
+  successDim:   "rgba(124, 176, 120, 0.18)",
+  warn:         "#FF7F2D",   // orange — partial credit, caution
+  warnDim:      "rgba(255, 127, 45, 0.18)",
   danger:       "#FF4F6D",   // fail, wrong, error
-  dangerDim:    "rgba(255, 79, 109, 0.12)",
+  dangerDim:    "rgba(255, 79, 109, 0.16)",
 
   // Text
-  textPrimary:  "#EEF0F8",
-  textSecondary:"#7B849E",
-  textMuted:    "#4A5168",
-  textInverse:  "#0A0E1A",
+  textPrimary:  "#F2F8FC",   // crisp cool white from user palette
+  textSecondary:"#9EAABF",   // soft readable slate
+  textMuted:    "#556073",
+  textInverse:  "#000000",   // true black text on light buttons
 
   // Border
-  border:       "#242D45",
-  borderFocus:  "#6C63FF",
+  border:       "#1F2430",
+  borderFocus:  "#4CB1FF",
+  borderSlate:  "#4A4B4B",
 
-  // Badge tier colors
+  // Badge tier colors (mapped to palette)
   badge: {
-    bronze:  { bg: "#7B4A1E", accent: "#D4834A", text: "#FFD4A8" },
-    silver:  { bg: "#2A3042", accent: "#9EB0CC", text: "#D6E4F0" },
-    gold:    { bg: "#3D2E06", accent: "#D4A827", text: "#FFECAA" },
-    diamond: { bg: "#1A2B3C", accent: "#60C8E8", text: "#B8EEFF" },
+    bronze:  { bg: "#2A180E", accent: "#FF7F2D", text: "#FEF6F4" },
+    silver:  { bg: "#161D24", accent: "#D0E6FF", text: "#F2F8FC" },
+    gold:    { bg: "#281E10", accent: "#FF7F2D", text: "#FFECAA" },
+    diamond: { bg: "#0D2132", accent: "#4CB1FF", text: "#D0E6FF" },
+    purple:  { bg: "#231828", accent: "#9C7BAC", text: "#F5F6FC" },
   },
 } as const;
 

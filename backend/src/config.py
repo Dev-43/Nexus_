@@ -7,8 +7,12 @@ Central configuration for Nexus backend.
   which reads this dict. Changing a model = one line change here, zero node changes.
 """
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+_ENV_FILE = _BACKEND_DIR / ".env"
 
 
 class Settings(BaseSettings):
@@ -16,7 +20,7 @@ class Settings(BaseSettings):
     Application settings, loaded from environment variables / .env file.
     """
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=(_ENV_FILE, ".env"),
         env_file_encoding="utf-8",
         extra="ignore",
     )
@@ -66,9 +70,9 @@ def get_settings() -> Settings:
 # To change which model handles a task: edit the string value here only.
 # ---------------------------------------------------------------------------
 MODEL_ROUTING: dict[str, str] = {
-    "roadmap_generation": "gemini-3.6-flash",   # long structured output + Pydantic
-    "quiz_generation": "meta/llama-3.3-70b-instruct",           # creative variation, fast
-    "gap_analysis": "meta/llama-3.3-70b-instruct",           # reasoning over test_history
-    "email_content": "meta/llama-3.3-70b-instruct",             # tone + writing quality
-    "fallback": "meta/llama-3.3-70b-instruct",                  # if any primary model is down
+    "roadmap_generation": "gemini-3.8-flash",                   # Google Gemini 3.8 Flash (structured schema output)
+    "quiz_generation": "nvidia/llama-3.1-nemotron-70b-instruct", # NVIDIA NIM LLaMA 3.1 Nemotron 70B (adaptive questions)
+    "gap_analysis": "gemini-4-argon",                           # Google Gemini 4 Argon (deep reasoning over test_history)
+    "email_content": "gemini-3.8-flash",                        # Google Gemini 3.8 Flash (tone & speed)
+    "fallback": "gemini-3.8-flash",                             # High-reliability fallback
 }

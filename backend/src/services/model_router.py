@@ -27,7 +27,7 @@ def _build_llm(model_name: str):
             google_api_key=settings.GOOGLE_API_KEY,
             temperature=0.7,
         )
-    if model_name.startswith("meta/llama"):  # fixed: was "metar/llama"
+    if any(model_name.startswith(p) for p in ("meta/", "nvidia/", "mistralai/")):  # fixed: was "metar/llama"
         return ChatNVIDIA(
             model=model_name,
             nvidia_api_key=settings.NVIDIA_API_KEY,

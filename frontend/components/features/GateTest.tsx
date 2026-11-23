@@ -44,8 +44,7 @@ interface GateTestProps {
   sessionId: string;
   roadmapId: string;
   questions?: GateTestQuestion[];
-  onResult: (score: number, passed: boolean) => void;
-  onResult: (score: number, passed: boolean,pointsEarned: number) => void;
+  onResult: (score: number, passed: boolean, pointsEarned: number) => void;
   /** Called specifically when the fail CTA "View sublevel suggestion" is clicked */
   onSubLevel?: () => void;
 }
@@ -162,9 +161,7 @@ function ScoreReveal({ score, state, onContinue, onSubLevel }: RevealProps) {
   function handleCta() {
     if (state === "fail" && onSubLevel) {
       onSubLevel();
-      onSubLevel();
     } else {
-      onContinue();
       onContinue();
     }
   }
@@ -266,22 +263,6 @@ export default function GateTest({
     setError(null);
 
     try {
-      let score: number;
-      try {
-        const result = await submitGateTest(levelId, nextAnswers);
-        score = result.score;
-      } catch {
-        const correct = nextAnswers.filter((a) => {
-          const q = questions.find((q) => q.id === a.question_id);
-          return q ? a.selected_index === resolveCorrectIndex(q) : false;
-        }).length;
-        score = Math.round((correct / questions.length) * 100);
-      }
-
-      const state = getRevealState(score);
-      setFinalScore(score);
-      setRevealState(state);
-    } catch {
       const result: GateTestSubmitResult = await submitGateTest(
         levelId,
         sessionId,
@@ -293,7 +274,12 @@ export default function GateTest({
       setRevealState(revealStateFromNextAction(result.next_action));
     } catch (err) {
       console.error("Gate test submit failed:", err);
-      setError("Something went wrong submitting your answers. Please try again.");
+      // Fallback calculation in case backend call fails
+      const correct = nextAnswers.filter((a) => a.correct).length;
+      const score = Math.round((correct / questions.length) * 100);
+      setFinalScore(score);
+      setFinalPointsEarned(0);
+      setRevealState(score >= 70 ? "pass" : score >= 50 ? "partial" : "fail");
     } finally {
       setSubmitting(false);
     }

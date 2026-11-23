@@ -18,9 +18,9 @@ interface ProgressBarProps {
 }
 
 const gradients = {
-  default: "linear-gradient(90deg, #6C63FF 0%, #2DD4A0 100%)",
-  success: "linear-gradient(90deg, #1EA87E 0%, #2DD4A0 100%)",
-  warn:    "linear-gradient(90deg, #D4830A 0%, #F5A623 100%)",
+  default: "linear-gradient(90deg, #4CB1FF 0%, #9C7BAC 50%, #7CB078 100%)",
+  success: "linear-gradient(90deg, #5A9456 0%, #7CB078 100%)",
+  warn:    "linear-gradient(90deg, #D46317 0%, #FF7F2D 100%)",
   danger:  "linear-gradient(90deg, #CC1E3D 0%, #FF4F6D 100%)",
 };
 
