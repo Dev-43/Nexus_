@@ -78,7 +78,7 @@ class TestRoadmapStreamGenerator:
             def supabase_table_side_effect(table_name):
                 tbl = MagicMock()
                 if table_name == "skill_sessions":
-                    tbl.select.return_value.eq.return_value.single.return_value.execute.return_value.data = mock_session
+                    tbl.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = mock_session
                 elif table_name == "roadmaps":
                     # First call: existing roadmap lookup
                     # Second call: saved roadmap ID lookup after generation
@@ -135,7 +135,7 @@ class TestRoadmapStreamGenerator:
             def supabase_table_side_effect(table_name):
                 tbl = MagicMock()
                 if table_name == "skill_sessions":
-                    tbl.select.return_value.eq.return_value.single.return_value.execute.return_value.data = mock_session
+                    tbl.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = mock_session
                 elif table_name == "roadmaps":
                     tbl.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value.data = [mock_roadmap]
                 elif table_name == "feature_flags":
@@ -169,7 +169,7 @@ class TestRoadmapStreamGenerator:
             def supabase_table_side_effect(table_name):
                 tbl = MagicMock()
                 if table_name == "skill_sessions":
-                    tbl.select.return_value.eq.return_value.single.return_value.execute.return_value.data = mock_session
+                    tbl.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = mock_session
                 elif table_name == "roadmaps":
                     tbl.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value.data = [mock_roadmap]
                 elif table_name == "feature_flags":
@@ -199,7 +199,7 @@ class TestRoadmapStreamGenerator:
             def supabase_table_side_effect(table_name):
                 tbl = MagicMock()
                 if table_name == "skill_sessions":
-                    tbl.select.return_value.eq.return_value.single.return_value.execute.return_value.data = None
+                    tbl.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = None
                 elif table_name == "roadmaps":
                     tbl.select.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value.data = []
                 elif table_name == "feature_flags":
@@ -239,7 +239,7 @@ class TestRegenerateEndpointGuards:
         with patch("src.routes.roadmap.get_supabase_client") as mock_supa:
             supa = MagicMock()
             mock_supa.return_value = supa
-            supa.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = mock_roadmap
+            supa.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = mock_roadmap
 
             resp = client.post("/roadmap/road-1/regenerate", json={"feedback": "change it"})
 
@@ -254,7 +254,7 @@ class TestRegenerateEndpointGuards:
         with patch("src.routes.roadmap.get_supabase_client") as mock_supa:
             supa = MagicMock()
             mock_supa.return_value = supa
-            supa.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = mock_roadmap
+            supa.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = mock_roadmap
 
             resp = client.post("/roadmap/road-1/regenerate", json={"feedback": "change it"})
 
@@ -268,7 +268,7 @@ class TestRegenerateEndpointGuards:
         with patch("src.routes.roadmap.get_supabase_client") as mock_supa:
             supa = MagicMock()
             mock_supa.return_value = supa
-            supa.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = mock_roadmap
+            supa.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = mock_roadmap
 
             resp = client.post("/roadmap/road-1/regenerate", json={"feedback": "   "})
 
@@ -281,8 +281,8 @@ class TestRegenerateEndpointGuards:
         with patch("src.routes.roadmap.get_supabase_client") as mock_supa:
             supa = MagicMock()
             mock_supa.return_value = supa
-            # select single → roadmap row
-            supa.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = mock_roadmap
+            # select maybe_single → roadmap row
+            supa.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = mock_roadmap
             # update call
             supa.table.return_value.update.return_value.eq.return_value.execute.return_value = MagicMock()
 
@@ -299,7 +299,7 @@ class TestRegenerateEndpointGuards:
         with patch("src.routes.roadmap.get_supabase_client") as mock_supa:
             supa = MagicMock()
             mock_supa.return_value = supa
-            supa.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = None
+            supa.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = None
 
             resp = client.post("/roadmap/bad-id/regenerate", json={"feedback": "change it"})
 
@@ -327,7 +327,7 @@ class TestGetRoadmap:
         with patch("src.routes.roadmap.get_supabase_client") as mock_supa:
             supa = MagicMock()
             mock_supa.return_value = supa
-            supa.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = mock_roadmap
+            supa.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = mock_roadmap
 
             resp = client.get("/roadmap/road-1")
 
@@ -340,7 +340,7 @@ class TestGetRoadmap:
         with patch("src.routes.roadmap.get_supabase_client") as mock_supa:
             supa = MagicMock()
             mock_supa.return_value = supa
-            supa.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = None
+            supa.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data = None
 
             resp = client.get("/roadmap/bad-id")
 

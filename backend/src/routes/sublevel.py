@@ -49,11 +49,11 @@ async def sublevel_decision(body: SubLevelDecisionRequest):
         supabase.table("skill_sessions")
         .select("*")
         .eq("id", body.session_id)
-        .single()
+        .maybe_single()
         .execute()
     )
 
-    if not result.data:
+    if not result or not result.data:
         raise HTTPException(status_code=404, detail="Session not found")
 
     session_row = result.data

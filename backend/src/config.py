@@ -71,8 +71,8 @@ def get_settings() -> Settings:
 # ---------------------------------------------------------------------------
 MODEL_ROUTING: dict[str, str] = {
     "roadmap_generation": "gemini-3.8-flash",                   # Google Gemini 3.8 Flash (structured schema output)
-    "quiz_generation": "nvidia/llama-3.1-nemotron-70b-instruct", # NVIDIA NIM LLaMA 3.1 Nemotron 70B (adaptive questions)
-    "gap_analysis": "gemini-4-argon",                           # Google Gemini 4 Argon (deep reasoning over test_history)
+    "quiz_generation": "gemini-3.8-flash",                      # Google Gemini 3.8 Flash (adaptive questions)
+    "gap_analysis": "gemini-3.8-flash",                         # Google Gemini 3.8 Flash (reasoning over test_history)
     "email_content": "gemini-3.8-flash",                        # Google Gemini 3.8 Flash (tone & speed)
     "fallback": "gemini-3.8-flash",                             # High-reliability fallback
 }

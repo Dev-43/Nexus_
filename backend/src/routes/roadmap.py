@@ -53,10 +53,10 @@ async def _load_state_for_session(session_id: str) -> NexusState:
         supabase.table("skill_sessions")
         .select("*")
         .eq("id", session_id)
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not session_resp.data:
+    if not session_resp or not session_resp.data:
         raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
 
     session = session_resp.data
@@ -285,10 +285,10 @@ async def get_roadmap(roadmap_id: str):
         supabase.table("roadmaps")
         .select("*")
         .eq("id", roadmap_id)
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not resp.data:
+    if not resp or not resp.data:
         raise HTTPException(status_code=404, detail=f"Roadmap {roadmap_id} not found")
 
     row = resp.data
@@ -298,10 +298,10 @@ async def get_roadmap(roadmap_id: str):
         supabase.table("skill_sessions")
         .select("skill_name, skill_level")
         .eq("id", row["session_id"])
-        .single()
+        .maybe_single()
         .execute()
     )
-    session = session_resp.data or {}
+    session = (session_resp.data if session_resp else None) or {}
 
     return {
         "id": row["id"],
@@ -342,10 +342,10 @@ async def regenerate_roadmap(roadmap_id: str, body: RegenerateRequest):
         supabase.table("roadmaps")
         .select("*")
         .eq("id", roadmap_id)
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not roadmap_resp.data:
+    if not roadmap_resp or not roadmap_resp.data:
         raise HTTPException(status_code=404, detail=f"Roadmap {roadmap_id} not found")
 
     roadmap = roadmap_resp.data

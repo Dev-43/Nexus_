@@ -58,20 +58,20 @@ async def submit_gate_test(level_id: str, body: GateTestSubmission) -> GateTestR
         supabase.table("skill_sessions")
         .select("*")
         .eq("id", body.session_id)
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not session_row.data:
+    if not session_row or not session_row.data:
         raise HTTPException(status_code=404, detail="Session not found")
 
     roadmap_row = (
         supabase.table("roadmaps")
         .select("*")
         .eq("id", body.roadmap_id)
-        .single()
+        .maybe_single()
         .execute()
     )
-    if not roadmap_row.data:
+    if not roadmap_row or not roadmap_row.data:
         raise HTTPException(status_code=404, detail="Roadmap not found")
 
     # ── Reconstruct minimal NexusState for the node ───────────────────────────

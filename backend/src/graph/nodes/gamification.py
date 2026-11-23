@@ -114,10 +114,10 @@ async def _load_user_stats(user_id: str) -> dict:
             supabase.table("user_stats")
             .select("*")
             .eq("user_id", user_id)
-            .single()
+            .maybe_single()
             .execute()
         )
-        return result.data or {}
+        return (result.data if result else None) or {}
     except Exception:
         return {}
 
