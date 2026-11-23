@@ -66,7 +66,7 @@ def get_settings() -> Settings:
 # To change which model handles a task: edit the string value here only.
 # ---------------------------------------------------------------------------
 MODEL_ROUTING: dict[str, str] = {
-    "roadmap_generation": "gemini-3.5-flash",   # long structured output + Pydantic
+    "roadmap_generation": "gemini-3.6-flash",   # long structured output + Pydantic
     "quiz_generation": "meta/llama-3.3-70b-instruct",           # creative variation, fast
     "gap_analysis": "meta/llama-3.3-70b-instruct",           # reasoning over test_history
     "email_content": "meta/llama-3.3-70b-instruct",             # tone + writing quality
