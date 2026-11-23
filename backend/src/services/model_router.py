@@ -15,8 +15,15 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_nvidia_ai_endpoints import ChatNVIDIA
 
 from src.config import get_settings, MODEL_ROUTING
+from src.services.rate_limiter import SlidingWindowRateLimiter, RateLimitedLLM
 
 settings = get_settings()
+
+# Global shared rate limiter for NVIDIA NIM (default 40 RPM)
+nvidia_rate_limiter = SlidingWindowRateLimiter(
+    max_calls=settings.NVIDIA_RPM,
+    period=60.0,
+)
 
 
 def _build_llm(model_name: str):
@@ -27,12 +34,13 @@ def _build_llm(model_name: str):
             google_api_key=settings.GOOGLE_API_KEY,
             temperature=0.7,
         )
-    if any(model_name.startswith(p) for p in ("meta/", "nvidia/", "mistralai/")):  # fixed: was "metar/llama"
-        return ChatNVIDIA(
+    if any(model_name.startswith(p) for p in ("meta/", "nvidia/", "mistralai/")):
+        raw_llm = ChatNVIDIA(
             model=model_name,
             nvidia_api_key=settings.NVIDIA_API_KEY,
             temperature=0.7,
         )
+        return RateLimitedLLM(raw_llm, nvidia_rate_limiter)
     raise ValueError(f"Unknown model name in MODEL_ROUTING: {model_name}")
 
 
@@ -50,6 +58,11 @@ def get_model(task_type: str):
     model (MODEL_ROUTING["fallback"]) instead — never raises.
     """
     model_name = MODEL_ROUTING.get(task_type, MODEL_ROUTING["fallback"])
+
+    # If using an NVIDIA model and custom NVIDIA_MODEL is defined, use that
+    if any(model_name.startswith(p) for p in ("meta/", "nvidia/", "mistralai/")):
+        if settings.NVIDIA_MODEL:
+            model_name = settings.NVIDIA_MODEL
 
     try:
         return _get_cached_llm(model_name)

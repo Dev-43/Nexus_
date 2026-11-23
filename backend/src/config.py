@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     # --- LLM providers ---
     GOOGLE_API_KEY: str = ""
     NVIDIA_API_KEY: str = ""
+    NVIDIA_MODEL: str = "nvidia/nemotron-3.5-lightning-30b-a3b"
+    NVIDIA_RPM: int = 40
     # --- LangSmith / LangChain tracing ---
     LANGCHAIN_TRACING_V2: bool = False
     LANGCHAIN_PROJECT: str = "nexus-dev"
@@ -69,10 +71,12 @@ def get_settings() -> Settings:
 #
 # To change which model handles a task: edit the string value here only.
 # ---------------------------------------------------------------------------
+_NVIDIA_MAIN = "nvidia/nemotron-3.5-lightning-30b-a3b"
+
 MODEL_ROUTING: dict[str, str] = {
-    "roadmap_generation": "gemini-3.8-flash",                   # Google Gemini 3.8 Flash (structured schema output)
-    "quiz_generation": "gemini-3.8-flash",                      # Google Gemini 3.8 Flash (adaptive questions)
-    "gap_analysis": "gemini-3.8-flash",                         # Google Gemini 3.8 Flash (reasoning over test_history)
-    "email_content": "gemini-3.8-flash",                        # Google Gemini 3.8 Flash (tone & speed)
+    "roadmap_generation": _NVIDIA_MAIN,                         # NVIDIA NIM (primary roadmap generation)
+    "quiz_generation": _NVIDIA_MAIN,                            # NVIDIA NIM (adaptive questions)
+    "gap_analysis": _NVIDIA_MAIN,                               # NVIDIA NIM (deep reasoning over test_history)
+    "email_content": _NVIDIA_MAIN,                              # NVIDIA NIM (tone & speed)
     "fallback": "gemini-3.8-flash",                             # High-reliability fallback
 }
