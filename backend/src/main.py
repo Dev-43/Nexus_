@@ -22,7 +22,12 @@ needs to be recreated, re-run that script manually — do not add .setup()
 back into this lifespan.
 """
 
+import sys
+import asyncio
 from contextlib import asynccontextmanager
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 from fastapi import FastAPI
 from src.routes.roadmap import router as roadmap_router
