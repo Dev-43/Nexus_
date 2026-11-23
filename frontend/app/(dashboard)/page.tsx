@@ -163,15 +163,48 @@ export default function DashboardPage() {
           return;
         }
 
-        // Swap for real Supabase query after Integration Sync #2:
-        // const { data } = await supabase
-        //   .from("skill_sessions")
-        //   .select("*, roadmaps(id, current_level_index, roadmap_data)")
-        //   .eq("user_id", user.id)
-        //   .order("updated_at", { ascending: false });
-        // setSessions(data ?? []);
+        // Query real Supabase session data:
+        const { data: dbSessions, error: sessErr } = await supabase
+          .from("skill_sessions")
+          .select("*, roadmaps(id, current_level_index, roadmap_data)")
+          .eq("user_id", user.id)
+          .order("updated_at", { ascending: false });
 
-        setSessions(MOCK_SESSIONS);
+        if (!sessErr && dbSessions && dbSessions.length > 0) {
+          const parsedSessions: SkillSession[] = dbSessions.map((row: any) => {
+            const roadmap = Array.isArray(row.roadmaps) ? row.roadmaps[0] : row.roadmaps;
+            const levels = roadmap?.roadmap_data?.levels ?? [];
+            return {
+              id: row.id,
+              skill_name: row.skill_name || "General",
+              skill_level: (row.skill_level as SkillLevel) || "beginner",
+              status: (row.status as SkillStatus) || "active",
+              created_at: row.created_at,
+              updated_at: row.updated_at,
+              roadmap_id: roadmap?.id,
+              current_level_index: roadmap?.current_level_index ?? 0,
+              total_levels: levels.length > 0 ? levels.length : 5,
+              xp: (roadmap?.current_level_index ?? 0) * 50 + 20,
+            };
+          });
+          setSessions(parsedSessions);
+        } else {
+          setSessions(MOCK_SESSIONS);
+        }
+
+        const { data: statsData } = await supabase
+          .from("user_stats")
+          .select("points, badges, streak_days")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (statsData) {
+          setStats({
+            points: statsData.points ?? MOCK_STATS.points,
+            badges: statsData.badges?.length ? statsData.badges : MOCK_STATS.badges,
+            streak_days: statsData.streak_days ?? MOCK_STATS.streak_days,
+          });
+        }
       } catch (err) {
         console.error("Dashboard load error:", err);
         setSessions(MOCK_SESSIONS);

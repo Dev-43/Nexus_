@@ -280,11 +280,11 @@ export async function regenerateRoadmap(id: string, feedback: string) {
   return res.json(); // { message, roadmap_id, regeneration_count, session_id }
 }
 
-// Mock — returns immediately so SubLevelModal works without a live backend
+// Real backend integration with graceful local fallback
 export async function submitSublevelDecision(
-  decision: SublevelDecision
-): Promise<{ success: boolean; next_action: string }> {
-  await new Promise((r) => setTimeout(r, 400)); // simulate network
+  decision: SublevelDecision,
+  sessionId?: string
+): Promise<{ success: boolean; next_action: string; sublevel_reject_count?: number }> {
   const nextActionMap: Record<SublevelDecision, string> = {
     accept: "sublevel_active",
     reject: "gate_test_retry",
@@ -292,6 +292,28 @@ export async function submitSublevelDecision(
     reassess: "reassess",
     microlesson: "microlesson",
   };
+
+  if (sessionId) {
+    try {
+      const res = await fetch(`${BACKEND_URL}/sublevel/decision`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId, decision }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        return {
+          success: true,
+          next_action: data.next_action,
+          sublevel_reject_count: data.sublevel_reject_count,
+        };
+      }
+    } catch (e) {
+      console.warn("Backend sublevel decision failed, falling back to local simulation:", e);
+    }
+  }
+
+  await new Promise((r) => setTimeout(r, 300)); // smooth transition
   return { success: true, next_action: nextActionMap[decision] };
 }
 
