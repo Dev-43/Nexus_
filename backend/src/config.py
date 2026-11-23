@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
     ENV: Literal["development", "production"] = "development"
     SECRET_KEY: str = ""
-    ALLOWED_ORIGINS: str = "http://localhost:3000"  # comma-separated, parsed via settings.allowed_origins_list
+    ALLOWED_ORIGINS: str = "http://localhost:3000,https://nexus-kappa-three-48.vercel.app"  # comma-separated, parsed via settings.allowed_origins_list
     # --- Supabase / Postgres ---
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_ROLE_KEY: str = ""
