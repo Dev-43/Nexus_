@@ -355,6 +355,32 @@ export interface GateTestSubmitResult {
   points_earned: number;
 }
 
+export interface GateQuestionItem {
+  id: string;
+  text: string;
+  options: string[];
+  correct_index?: number;
+  concept_tag?: string;
+}
+
+export async function fetchLevelQuestions(
+  levelId: string,
+  skillName: string = "Data Analysis",
+  levelTitle: string = "Foundations"
+): Promise<GateQuestionItem[]> {
+  try {
+    const res = await fetch(
+      `${BACKEND_URL}/level/${levelId}/questions?skill_name=${encodeURIComponent(skillName)}&level_title=${encodeURIComponent(levelTitle)}`
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.questions || [];
+  } catch (err) {
+    console.warn("fetchLevelQuestions error:", err);
+    return [];
+  }
+}
+
 export async function submitGateTest(
   levelId: string,
   sessionId: string,

@@ -358,6 +358,8 @@ export default function LevelContentPage() {
           levelId={levelIndex.toString()}
           sessionId={sessionId}
           roadmapId={roadmapId}
+          skillName={roadmap?.skill_name || "Data Analysis"}
+          levelTitle={level.title}
           onResult={handleTestResult}
           onSubLevel={() => setShowSublevel(true)}
         />
