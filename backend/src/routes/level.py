@@ -12,7 +12,7 @@ import json
 import logging
 from typing import Any
 from src.graph.nodes.gamification import gamification_node
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from src.graph.nodes.level_gate import level_gate_node
