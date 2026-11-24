@@ -97,42 +97,48 @@ function ResourceCard({
         </div>
 
         {resource.description && (
-          <p style={{ margin: "0 0 var(--space-2) 0", fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", lineHeight: 1.6 }}>
+          <p style={{ margin: "0 0 var(--space-3) 0", fontSize: "var(--text-sm)", color: "var(--color-text-secondary)", lineHeight: 1.6 }}>
             {resource.description}
           </p>
         )}
 
-        {resource.url ? (
-          <a
-            href={resource.url}
-            target="_blank"
-            rel="noreferrer"
-            onClick={onOpen}
-            style={{
-              fontSize: "var(--text-sm)",
-              color: "var(--color-primary)",
-              textDecoration: "none",
-              fontWeight: 500,
-            }}
-          >
-            Open resource ↗
-          </a>
-        ) : (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginTop: 4 }}>
+          {resource.url && (
+            <a
+              href={resource.url}
+              target="_blank"
+              rel="noreferrer"
+              onClick={onOpen}
+              style={{
+                fontSize: "var(--text-sm)",
+                color: "var(--color-brand, #3B82F6)",
+                textDecoration: "none",
+                fontWeight: 600,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              Open resource ↗
+            </a>
+          )}
           <button
             onClick={onOpen}
             style={{
-              fontSize: "var(--text-sm)",
-              color: "var(--color-primary)",
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: "pointer",
+              fontSize: "12px",
               fontWeight: 500,
+              color: isOpened ? "var(--color-success, #10B981)" : "var(--color-text-muted, #64748B)",
+              background: isOpened ? "rgba(16, 185, 129, 0.1)" : "var(--color-surface-raised, #121520)",
+              border: `1px solid ${isOpened ? "rgba(16, 185, 129, 0.3)" : "var(--color-border, #1E2330)"}`,
+              borderRadius: "6px",
+              padding: "3px 10px",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
             }}
           >
-            {isOpened ? "Marked as reviewed ✓" : "Mark as reviewed"}
+            {isOpened ? "Reviewed ✓" : "Mark as reviewed"}
           </button>
-        )}
+        </div>
       </div>
     </div>
   );

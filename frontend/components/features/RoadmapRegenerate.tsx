@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { regenerateRoadmap } from "@/lib/api";
 import { useRouter } from "next/navigation";
+import "./RoadmapRegenerate.css";
 
 interface RoadmapRegenerateProps {
   roadmapId: string;

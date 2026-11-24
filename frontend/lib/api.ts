@@ -402,3 +402,44 @@ export async function submitGateTest(
   }
   return res.json();
 }
+
+export interface SubLevelLessonData {
+  id: string;
+  title: string;
+  concept_tag: string;
+  estimated_time: string;
+  overview: string;
+  key_takeaways: string[];
+  code_snippet?: string;
+  action_exercise: string;
+  resource_url?: string;
+  resource_title?: string;
+}
+
+export interface SubLevelDataResponse {
+  level_id: string;
+  level_title: string;
+  skill_name: string;
+  target_gaps: string[];
+  summary: string;
+  estimated_time: string;
+  lessons: SubLevelLessonData[];
+}
+
+export async function fetchLevelSublevel(
+  levelId: string,
+  roadmapId: string,
+  skillName: string = "Data Analysis",
+  levelTitle: string = ""
+): Promise<SubLevelDataResponse | null> {
+  try {
+    const res = await fetch(
+      `${BACKEND_URL}/level/${levelId}/sublevel?roadmap_id=${encodeURIComponent(roadmapId)}&skill_name=${encodeURIComponent(skillName)}&level_title=${encodeURIComponent(levelTitle)}`
+    );
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.warn("fetchLevelSublevel error:", err);
+    return null;
+  }
+}

@@ -447,3 +447,231 @@ async def submit_gate_test(level_id: str, body: GateTestSubmission) -> GateTestR
         roadmap_locked=updated_state["roadmap_locked"],
         points_earned=points_earned,
     )
+
+
+# ── Sublevel Lesson Models & Endpoint ─────────────────────────────────────────
+
+class SubLevelLesson(BaseModel):
+    id: str
+    title: str
+    concept_tag: str
+    estimated_time: str
+    overview: str
+    key_takeaways: list[str]
+    code_snippet: str = ""
+    action_exercise: str
+    resource_url: str = ""
+    resource_title: str = ""
+
+
+class SubLevelResponse(BaseModel):
+    level_id: str
+    level_title: str
+    skill_name: str
+    target_gaps: list[str]
+    summary: str
+    estimated_time: str
+    lessons: list[SubLevelLesson]
+
+
+CURATED_SUBLEVELS: dict[str, dict] = {
+    "data analysis": {
+        "target_gaps": ["data_cleaning", "distribution_analysis", "correlation_analysis"],
+        "summary": "Targeted remediation focusing on Pandas manipulation, handling missing data, and statistical distributions.",
+        "estimated_time": "15–20 min",
+        "lessons": [
+            {
+                "id": "da-l1",
+                "title": "Mastering Pandas Boolean Indexing & Filter Logic",
+                "concept_tag": "data_filtering",
+                "estimated_time": "5 min",
+                "overview": "Vectorized filtering is fundamental in Pandas. Instead of Python loops, apply vectorized Boolean masks using bitwise operators (`&`, `|`, `~`). Each individual condition must be enclosed in parentheses to prevent operator precedence bugs.",
+                "key_takeaways": [
+                    "Always enclose multiple conditions in parentheses: (df['colA'] > 0) & (df['colB'] < 10)",
+                    "Use bitwise operators & (AND) and | (OR) because logical 'and'/'or' evaluate the entire truth value of Series",
+                    "Use .isin([...]) for multiple value matching rather than multiple OR conditions"
+                ],
+                "code_snippet": "# Correct vectorized filtering\nsubset = df[(df['age'] >= 21) & (df['status'].isin(['active', 'pending']))]\n# Efficient column selection with .loc\nclean_rows = df.loc[df['score'] > 80, ['user_id', 'score', 'region']]",
+                "action_exercise": "Write a 1-liner to select all rows where 'sales' exceeds the 75th percentile and 'returns' equals 0.",
+                "resource_url": "https://pandas.pydata.org/docs/user_guide/indexing.html",
+                "resource_title": "Official Pandas Indexing & Selecting Data",
+            },
+            {
+                "id": "da-l2",
+                "title": "Systematic Detection & Imputation of Missing Values",
+                "concept_tag": "data_cleaning",
+                "estimated_time": "6 min",
+                "overview": "Missing values (NaN, None, sentinel numbers like -999) lead to silent estimation errors and algorithmic failure. Clean data pipelines require quantifying missingness, deciding between imputation and dropping, and avoiding data leakage.",
+                "key_takeaways": [
+                    "Inspect missingness with df.isna().mean() to get percentage missing per column",
+                    "Never drop rows indiscriminately if missingness exceeds 5% — evaluate MAR (Missing At Random)",
+                    "For skewed numerical variables, median imputation is more robust against outliers than mean",
+                    "For time series, use forward-fill (.ffill()) or backward-fill (.bfill())"
+                ],
+                "code_snippet": "# Audit and impute\nnull_pct = df.isna().mean() * 100\n# Impute skewed feature with median\ndf['income'] = df['income'].fillna(df['income'].median())\n# Drop rows where target label is missing\ndf.dropna(subset=['target_metric'], inplace=True)",
+                "action_exercise": "Audit your dataset for columns with >20% missing values and compare mean vs median before choosing an imputation strategy.",
+                "resource_url": "https://realpython.com/python-data-cleaning-numpy-pandas/",
+                "resource_title": "Python Data Cleaning with NumPy and Pandas",
+            },
+            {
+                "id": "da-l3",
+                "title": "Interpreting Statistical Distributions & Correlation",
+                "concept_tag": "distribution_analysis",
+                "estimated_time": "5 min",
+                "overview": "Correlation does not imply causation, and Pearson correlation only captures linear relationships. Visualizing distributions with histograms, KDEs, and boxplots reveals skewness, multi-modality, and outliers that raw summaries obscure.",
+                "key_takeaways": [
+                    "A correlation coefficient of -0.85 means a strong inverse linear trend, not causality",
+                    "Boxplots highlight the Interquartile Range (IQR); points beyond 1.5 * IQR are candidate outliers",
+                    "Log-transform highly right-skewed variables (e.g. monetary amounts, counts) to stabilize variance"
+                ],
+                "code_snippet": "import numpy as np\n# Apply log transform to positive skewed data\ndf['log_revenue'] = np.log1p(df['revenue'])\n# Calculate Spearman rank correlation for monotonic non-linear relations\nrank_corr = df[['engagement', 'log_revenue']].corr(method='spearman')",
+                "action_exercise": "Plot a KDE distribution of your numerical target and check whether skewness exceeds +/- 1.0.",
+                "resource_url": "https://seaborn.pydata.org/tutorial/distributions.html",
+                "resource_title": "Visualizing Distributions of Data in Seaborn",
+            },
+        ],
+    },
+    "python": {
+        "target_gaps": ["oop_basics", "data_types", "generators"],
+        "summary": "Targeted remediation on Python object initialization, mutable vs immutable structures, and generator pipelines.",
+        "estimated_time": "15–20 min",
+        "lessons": [
+            {
+                "id": "py-l1",
+                "title": "Object Initialization & The Role of __init__",
+                "concept_tag": "oop_basics",
+                "estimated_time": "5 min",
+                "overview": "In Python, `__init__` is an instance initializer called right after `__new__` creates the object instance. It binds state attributes to `self`. It must not return any value other than None.",
+                "key_takeaways": [
+                    "__init__ receives the newly constructed instance as 'self' and sets attributes",
+                    "Never use mutable default arguments (like def __init__(self, items=[])): defaults are evaluated once at definition time!",
+                    "Use __repr__ alongside __init__ for unambiguous debugging representations"
+                ],
+                "code_snippet": "class DatasetTracker:\n    def __init__(self, name: str, schema: list[str] | None = None):\n        self.name = name\n        # Safe default pattern for mutable lists\n        self.schema = schema if schema is not None else []",
+                "action_exercise": "Refactor a class with a mutable default argument into the safe `None` sentinel pattern.",
+                "resource_url": "https://docs.python.org/3/tutorial/classes.html",
+                "resource_title": "Python Official Classes & Objects Tutorial",
+            },
+            {
+                "id": "py-l2",
+                "title": "Mutability & Memory Semantics in Python",
+                "concept_tag": "data_types",
+                "estimated_time": "5 min",
+                "overview": "Python variables are references to objects in memory. Lists, dictionaries, and sets are mutable (in-place modification); tuples, strings, integers, and frozensets are immutable (reassignment creates new objects).",
+                "key_takeaways": [
+                    "Passing a mutable list to a function allows the function to modify the caller's object in-place",
+                    "To create an independent copy, use copy.deepcopy() or list slicing [:]",
+                    "Immutable objects are hashable and can be dictionary keys or set elements"
+                ],
+                "code_snippet": "original = [1, 2, [3, 4]]\nimport copy\nshallow = original.copy()   # shallow['sublist'] is still shared!\ndeep = copy.deepcopy(original) # fully isolated copy",
+                "action_exercise": "Create a dictionary using a tuple as a composite key (user_id, timestamp) and verify that lists fail with TypeError: unhashable type.",
+                "resource_url": "https://realpython.com/python-data-structures/",
+                "resource_title": "Python Data Structures Guide",
+            },
+            {
+                "id": "py-l3",
+                "title": "Memory-Efficient Pipelines with Generators & Yield",
+                "concept_tag": "generators",
+                "estimated_time": "6 min",
+                "overview": "Generators allow processing gigabyte-scale streams without loading the entire payload into RAM. The `yield` keyword pauses function execution, saves state, and returns a value to the caller, resuming on `next()`.",
+                "key_takeaways": [
+                    "A function containing 'yield' returns a generator object, executing lazily on demand",
+                    "Generator expressions: (x**2 for x in huge_list) consume O(1) memory vs [x**2 for ...] which consumes O(N)",
+                    "StopIteration is automatically raised when generator finishes, driving for-loops naturally"
+                ],
+                "code_snippet": "def stream_log_lines(filepath):\n    with open(filepath, 'r', encoding='utf-8') as f:\n        for line in f:\n            if 'ERROR' in line:\n                yield line.strip()",
+                "action_exercise": "Chain two generator functions: one that reads lines, and another that filters and parses JSON entries lazily.",
+                "resource_url": "https://realpython.com/introduction-to-python-generators/",
+                "resource_title": "Introduction to Python Generators and Yield",
+            },
+        ],
+    },
+    "javascript": {
+        "target_gaps": ["variable_scoping", "async_flow", "event_loop"],
+        "summary": "Targeted remediation on modern ES6 scoping, Promise concurrency, and the JavaScript event loop.",
+        "estimated_time": "15–20 min",
+        "lessons": [
+            {
+                "id": "js-l1",
+                "title": "Scoping Semantics: let, const vs legacy var",
+                "concept_tag": "variable_scoping",
+                "estimated_time": "5 min",
+                "overview": "Understanding lexical scoping avoids subtle state leakage. `let` and `const` are block-scoped and live in the Temporal Dead Zone (TDZ) until evaluated. `var` is function-scoped and hoisted with undefined initialization.",
+                "key_takeaways": [
+                    "Default to `const`; only use `let` when reassignment is explicitly required",
+                    "Never use `var` in modern codebases to avoid hoisting pollution across loop iterations",
+                    "`const` prevents variable reassignment, but object properties inside it remain mutable"
+                ],
+                "code_snippet": "for (let i = 0; i < 3; i++) {\n  setTimeout(() => console.log(i), 10); // prints 0, 1, 2\n}\n// with 'var i', all callbacks would print 3!",
+                "action_exercise": "Inspect a closure inside a loop and refactor any hoisted variables to block-scoped `let`.",
+                "resource_url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let",
+                "resource_title": "MDN Reference: let & block scoping",
+            },
+            {
+                "id": "js-l2",
+                "title": "Promise Concurrency with Promise.all vs Promise.allSettled",
+                "concept_tag": "async_flow",
+                "estimated_time": "5 min",
+                "overview": "Running independent async calls in sequence hurts performance. Running them concurrently with `Promise.all` fails fast on any single rejection; `Promise.allSettled` waits for all results regardless of failure.",
+                "key_takeaways": [
+                    "Use Promise.all() when all operations are critical and dependent on each other",
+                    "Use Promise.allSettled() when fetching independent items (e.g. notifications, user feeds) so one failure doesn't break the UI",
+                    "Always catch async errors or use try/catch in async/await functions"
+                ],
+                "code_snippet": "const results = await Promise.allSettled([\n  fetch('/api/profile'),\n  fetch('/api/notifications')\n]);\nconst successful = results.filter(r => r.status === 'fulfilled');",
+                "action_exercise": "Convert 3 sequential await statements into a concurrent Promise.all execution and measure latency.",
+                "resource_url": "https://javascript.info/promise-api",
+                "resource_title": "JavaScript.info: Promise API & Parallel Execution",
+            },
+            {
+                "id": "js-l3",
+                "title": "The Microtask Queue & Event Loop Mechanics",
+                "concept_tag": "event_loop",
+                "estimated_time": "6 min",
+                "overview": "JavaScript is single-threaded with a non-blocking event loop. Microtasks (Promise callbacks, queueMicrotask) run immediately after the current script and before any Macrotasks (setTimeout, setInterval).",
+                "key_takeaways": [
+                    "Execution order: Synchronous Call Stack -> Microtask Queue (all) -> Macrotask Queue (one)",
+                    "Heavy computations block UI rendering; chunk long loops using requestAnimationFrame or Web Workers"
+                ],
+                "code_snippet": "console.log('1'); // Sync\nsetTimeout(() => console.log('2'), 0); // Macrotask\nPromise.resolve().then(() => console.log('3')); // Microtask\nconsole.log('4'); // Sync\n// Output: 1, 4, 3, 2",
+                "action_exercise": "Predict and verify the console output of mixed synchronous code, promises, and setTimeouts.",
+                "resource_url": "https://javascript.info/event-loop",
+                "resource_title": "Event loop: microtasks and macrotasks",
+            },
+        ],
+    },
+}
+
+
+@router.get("/{level_id}/sublevel", response_model=SubLevelResponse)
+async def get_level_sublevel(
+    level_id: str,
+    roadmap_id: str = Query(..., description="ID of the roadmap"),
+    skill_name: str = Query("Data Analysis", description="Skill name"),
+    level_title: str = Query("", description="Level title"),
+):
+    """
+    Returns 3 rich, actionable mini-lessons targeting the specific concept gaps
+    for this level's gate test miss.
+    """
+    clean_skill = skill_name.lower().strip()
+    match_key = None
+    for k in CURATED_SUBLEVELS:
+        if k in clean_skill or clean_skill in k:
+            match_key = k
+            break
+
+    curated = CURATED_SUBLEVELS.get(match_key or "data analysis")
+
+    lvl_name = level_title or f"Level {int(level_id) + 1 if level_id.isdigit() else level_id}"
+
+    return SubLevelResponse(
+        level_id=level_id,
+        level_title=lvl_name,
+        skill_name=skill_name,
+        target_gaps=curated["target_gaps"],
+        summary=curated["summary"],
+        estimated_time=curated["estimated_time"],
+        lessons=[SubLevelLesson(**l) for l in curated["lessons"]],
+    )
+
