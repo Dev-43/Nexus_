@@ -39,6 +39,7 @@ def _build_llm(model_name: str):
             model=model_name,
             nvidia_api_key=settings.NVIDIA_API_KEY,
             temperature=0.7,
+            max_tokens=4096,
         )
         return RateLimitedLLM(raw_llm, nvidia_rate_limiter)
     raise ValueError(f"Unknown model name in MODEL_ROUTING: {model_name}")
