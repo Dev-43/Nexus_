@@ -1,36 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Nexus Frontend — Adaptive Learning Dashboard & UI
 
-## Getting Started
+Modern, high-performance Next.js 14 frontend for Nexus, built with React Server Components, Tailwind CSS, and a True Black OLED aesthetic.
 
-First, run the development server:
+- **Live Deployment:** [https://nexus-kappa-three-48.vercel.app/](https://nexus-kappa-three-48.vercel.app/)
+- **Connected Backend:** [https://nexus-2qcw.onrender.com](https://nexus-2qcw.onrender.com)
+
+---
+
+## Features
+
+- **True Black OLED Visuals:** Pure `#000000` base with `#090A0F` surfaces and vibrant accents (Electric Cobalt `#3B82F6`, Emerald `#10B981`, Amber `#F59E0B`, Ruby `#EF4444`).
+- **Live SSE Streaming:** Server-Sent Events hooks for real-time roadmap token streaming and live regeneration animations.
+- **Adaptive Assessments:** Interactive multi-choice assessments with immediate feedback and difficulty adjustment indicators.
+- **Level Progress & Gate Tests:** Progression tracking with gate test evaluations, retry mechanics, and remedial sublevel offers.
+- **Supabase Authentication:** Seamless sign-in with Google OAuth and session management.
+
+---
+
+## Local Development
+
+### 1. Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure Environment
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create `.env.local` based on `.env.example`:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```ini
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+NEXT_PUBLIC_BACKEND_URL=https://nexus-2qcw.onrender.com  # Or http://localhost:8000 for local dev
+```
 
-## Learn More
+### 3. Start Development Server
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Production Build
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm build
+pnpm start
+```
