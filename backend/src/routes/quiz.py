@@ -219,9 +219,15 @@ async def _generate_question(skill_name: str, difficulty: str, index: int, asked
         )
         raw = await llm.ainvoke(prompt)
         content = (raw.content or "").strip()
+        if not content and hasattr(raw, "additional_kwargs"):
+            content = (raw.additional_kwargs.get("reasoning_content") or "").strip()
 
-        # Some models wrap JSON in markdown fences despite instructions not to
-        if content.startswith("```"):
+        # Robust extraction: find JSON object boundaries '{' and '}'
+        start_idx = content.find("{")
+        end_idx = content.rfind("}")
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            content = content[start_idx : end_idx + 1]
+        elif content.startswith("```"):
             content = re.sub(r"^```(?:json)?\s*|\s*```$", "", content.strip())
 
         parsed = json.loads(content)

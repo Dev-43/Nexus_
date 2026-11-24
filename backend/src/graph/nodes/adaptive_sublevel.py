@@ -150,11 +150,17 @@ async def adaptive_sublevel_node(state: NexusState) -> NexusState:
         llm: BaseChatModel = get_model("gap_analysis")
 
         response = await llm.ainvoke(prompt)
-        raw_text = response.content
+        raw_text = (response.content or "").strip()
+        if not raw_text and hasattr(response, "additional_kwargs"):
+            raw_text = (response.additional_kwargs.get("reasoning_content") or "").strip()
 
-        # Strip any accidental markdown fences
-        clean_text = raw_text.strip()
-        if clean_text.startswith("```"):
+        # Robust extraction: find JSON object boundaries '{' and '}'
+        clean_text = raw_text
+        start_idx = clean_text.find("{")
+        end_idx = clean_text.rfind("}")
+        if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+            clean_text = clean_text[start_idx : end_idx + 1]
+        elif clean_text.startswith("```"):
             clean_text = clean_text.split("```")[1]
             if clean_text.startswith("json"):
                 clean_text = clean_text[4:]
