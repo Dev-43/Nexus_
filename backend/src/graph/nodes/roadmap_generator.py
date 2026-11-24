@@ -10,9 +10,13 @@ Owned state fields (write):
     roadmap, roadmap_version, error_message, error_node, next_action
 """
 
+import json
+import logging
 from src.models.roadmap import Roadmap
 from src.services.model_router import get_model
 from src.services.supabase_client import get_supabase_client
+
+logger = logging.getLogger(__name__)
 
 
 PROMPT_TEMPLATE = """You are an expert curriculum designer.
@@ -93,26 +97,93 @@ async def roadmap_generator_node(state: dict) -> dict:
 
         # --- Get model via router (never hardcode model name) ---
         llm = get_model("roadmap_generation")
-        structured_llm = llm.with_structured_output(Roadmap)
+        roadmap: Roadmap | None = None
 
-        roadmap: Roadmap | None = await structured_llm.ainvoke(prompt)
-
-        if roadmap is None:
-            # Structured extraction failed silently (known behavior on some
-            # providers, e.g. ChatNVIDIA, when the schema isn't satisfied).
-            # Retry once before falling back.
+        # 1. First attempt: with_structured_output (standard for Gemini & supported models)
+        try:
+            structured_llm = llm.with_structured_output(Roadmap)
             roadmap = await structured_llm.ainvoke(prompt)
+        except Exception as err:
+            # NVIDIA NIM does not support guided_json (returns HTTP 400 unknown field `guided_json`)
+            # Handle this specifically by falling back to direct JSON prompting
+            if "guided_json" in str(err).lower() or "400" in str(err):
+                logger.info("Provider does not support guided_json — falling back to direct JSON prompting")
+                json_prompt = (
+                    f"{prompt}\n\n"
+                    "Respond ONLY with a single valid JSON object matching this schema:\n"
+                    "{\n"
+                    f'  "skill_name": "{state["skill_name"]}",\n'
+                    f'  "skill_level": "{state["skill_level"]}",\n'
+                    '  "total_levels": 3,\n'
+                    '  "levels": [\n'
+                    '    {\n'
+                    '      "index": 0,\n'
+                    '      "title": "Level Title",\n'
+                    '      "description": "Level description",\n'
+                    '      "locked": false,\n'
+                    '      "resources": [\n'
+                    '        {"title": "Resource Name", "type": "article", "url": "https://...", "description": "..."}\n'
+                    '      ]\n'
+                    '    }\n'
+                    '  ]\n'
+                    "}\n"
+                    "No markdown fences, no explanation before or after. Pure JSON only."
+                )
+                raw = await llm.ainvoke(json_prompt)
+                content = (raw.content or "").strip()
+                if not content and hasattr(raw, "additional_kwargs"):
+                    content = (raw.additional_kwargs.get("reasoning_content") or "").strip()
+
+                start_idx = content.find("{")
+                end_idx = content.rfind("}")
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    content = content[start_idx : end_idx + 1]
+
+                try:
+                    parsed_json = json.loads(content)
+                    roadmap = Roadmap.model_validate(parsed_json)
+                except Exception as parse_err:
+                    logger.warning("Direct JSON roadmap parsing failed (%s)", parse_err)
+                    roadmap = None
+            else:
+                # Other unexpected failures (e.g. Gemini timeout, network down) raise to error_handler
+                raise
 
         if roadmap is None:
             # Still nothing — use the documented emergency fallback so the
             # demo never crashes. See Emergency Fallback Phase, Fallback 2.
             roadmap_dict = {
                 "skill_name": state["skill_name"],
+                "skill_level": state["skill_level"],
                 "total_levels": 3,
                 "levels": [
-                    {"index": 0, "title": "Foundations", "description": "Core concepts and fundamentals", "resources": [], "locked": False},
-                    {"index": 1, "title": "Applied Skills", "description": "Hands-on practice and projects", "resources": [], "locked": True},
-                    {"index": 2, "title": "Advanced Topics", "description": "Expert patterns and real-world projects", "resources": [], "locked": True},
+                    {
+                        "index": 0,
+                        "title": f"{state['skill_name']} Foundations & Core Architecture",
+                        "description": f"Master core concepts, fundamentals, and environment setup for {state['skill_name']}.",
+                        "resources": [
+                            {"title": f"{state['skill_name']} Documentation", "type": "documentation", "url": "https://docs.python.org", "description": "Official documentation"}
+                        ],
+                        "locked": False,
+                    },
+                    {
+                        "index": 1,
+                        "title": f"Applied {state['skill_name']} & Practical Workflows",
+                        "description": f"Hands-on implementation, intermediate patterns, and libraries in {state['skill_name']}.",
+                        "resources": [
+                            {"title": "Project Workflows & Implementation", "type": "project", "url": "https://github.com", "description": "Hands-on projects"}
+                        ],
+                        "locked": True,
+                    },
+                    {
+                        "index": 2,
+                        "title": f"Advanced {state['skill_name']} & Production Systems",
+                        "description": f"Expert optimization, scaling, performance, and best practices in {state['skill_name']}.",
+                        "resources": [
+                            {"title": "Advanced Engineering Patterns", "type": "article", "url": "https://medium.com", "description": "Production architectures"}
+                        ],
+                        "locked": True,
+                    },
                 ],
             }
         else:

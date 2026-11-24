@@ -5,8 +5,8 @@ Used with `.with_structured_output(Roadmap)` when calling Gemini Flash
 in roadmap_generator.py. Frozen after Day 1 alongside NexusState.
 """
 
-from typing import Literal, Optional
-from pydantic import BaseModel, Field
+from typing import Any, Literal, Optional
+from pydantic import BaseModel, Field, field_validator
 
 
 class Resource(BaseModel):
@@ -14,7 +14,7 @@ class Resource(BaseModel):
 
     title: str = Field(..., description="Title of the resource")
     type: Literal["article", "video", "exercise", "project", "documentation"] = Field(
-        ..., description="The kind of resource"
+        default="article", description="The kind of resource"
     )
     url: Optional[str] = Field(
         default=None, description="Link to the resource, if applicable"
@@ -22,6 +22,22 @@ class Resource(BaseModel):
     description: Optional[str] = Field(
         default=None, description="Short description of what this resource covers"
     )
+
+    @field_validator("type", mode="before")
+    @classmethod
+    def normalize_type(cls, v: Any) -> str:
+        if not isinstance(v, str):
+            return "article"
+        v_low = v.lower()
+        if "doc" in v_low:
+            return "documentation"
+        if any(w in v_low for w in ("vid", "course", "watch")):
+            return "video"
+        if any(w in v_low for w in ("proj", "build", "dataset")):
+            return "project"
+        if any(w in v_low for w in ("ex", "quiz", "task", "practice", "tutorial")):
+            return "exercise"
+        return "article"
 
 
 class Level(BaseModel):
@@ -43,10 +59,20 @@ class Roadmap(BaseModel):
 
     skill_name: str = Field(..., description="The skill this roadmap covers")
     skill_level: Literal["beginner", "intermediate", "advanced"] = Field(
-        ..., description="The user's skill level this roadmap targets"
+        default="beginner", description="The user's skill level this roadmap targets"
     )
     total_levels: int = Field(..., description="Total number of levels in this roadmap")
     levels: list[Level] = Field(..., description="Ordered list of levels, at least 3")
+
+    @field_validator("skill_level", mode="before")
+    @classmethod
+    def normalize_skill_level(cls, v: Any) -> str:
+        if not isinstance(v, str):
+            return "beginner"
+        v_low = v.lower().strip()
+        if v_low in ("beginner", "intermediate", "advanced"):
+            return v_low
+        return "beginner"
 
 
 class MiniLevel(BaseModel):
