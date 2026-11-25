@@ -118,12 +118,12 @@ export const radius = {
 } as const;
 
 export const shadows = {
-  card:        "0 2px 8px rgba(0,0,0,0.32)",
-  cardHover:   "0 4px 20px rgba(108, 99, 255, 0.20)",
-  modal:       "0 16px 48px rgba(0,0,0,0.64)",
-  glow:        "0 0 0 3px rgba(108, 99, 255, 0.30)",
-  glowSuccess: "0 0 0 3px rgba(45, 212, 160, 0.30)",
-  glowDanger:  "0 0 0 3px rgba(255, 79, 109, 0.30)",
+  card:        "0 0 0 1px rgba(255, 255, 255, 0.08)",
+  cardHover:   "0 0 0 1px rgba(255, 255, 255, 0.15)",
+  modal:       "0 20px 60px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.1)",
+  glow:        "0 0 0 2px rgba(59, 130, 246, 0.45)",
+  glowSuccess: "0 0 0 2px rgba(16, 185, 129, 0.45)",
+  glowDanger:  "0 0 0 2px rgba(239, 68, 68, 0.45)",
 } as const;
 
 export const transitions = {

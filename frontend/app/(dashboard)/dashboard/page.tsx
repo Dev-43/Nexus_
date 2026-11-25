@@ -436,7 +436,7 @@ function StatCard({
   return (
     <div style={styles.statCard}>
       <p style={styles.statLabel}>{label}</p>
-      <p style={styles.statValue}>{value}</p>
+      <p style={{ ...styles.statValue, fontVariantNumeric: "tabular-nums" }}>{value}</p>
       <p style={styles.statSub}>{sub}</p>
     </div>
   );
@@ -483,11 +483,10 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: "2rem",
   },
   statCard: {
-    background: "#090A0F",
-    border: "1px solid #1E2330",
+    background: "#090A0D",
     borderRadius: tokens.radii.md,
     padding: "1rem 1.25rem",
-    boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
+    boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.08)",
   },
   statLabel: {
     fontSize: 12,
@@ -524,14 +523,15 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: "2rem",
   },
   card: {
-    background: "#090A0F",
-    border: "1px solid #1E2330",
+    background: "#090A0D",
     borderRadius: tokens.radii.lg,
     padding: "1.25rem",
     cursor: "pointer",
     position: "relative" as const,
-    transition: "border-color 0.15s, box-shadow 0.15s, transform 0.15s",
-    boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+    transitionProperty: "box-shadow, transform",
+    transitionDuration: "150ms",
+    transitionTimingFunction: "ease-out",
+    boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.08)",
   },
   focusBadge: {
     position: "absolute" as const,

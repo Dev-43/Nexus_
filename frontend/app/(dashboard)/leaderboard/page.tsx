@@ -237,16 +237,12 @@ export default function LeaderboardPage() {
                 <Card
                   key={item.id}
                   style={{
-                    background:
-                      index === 0
-                        ? 'linear-gradient(180deg, rgba(59, 130, 246, 0.16) 0%, #090A0F 100%)'
-                        : '#090A0F',
-                    border: index === 0 ? '1px solid #3B82F6' : '1px solid #1E2330',
+                    background: '#090A0D',
                     borderRadius: '16px',
                     padding: '24px',
                     textAlign: 'center',
                     position: 'relative',
-                    boxShadow: index === 0 ? '0 8px 30px rgba(59, 130, 246, 0.2)' : '0 4px 14px rgba(0,0,0,0.5)',
+                    boxShadow: index === 0 ? '0 0 0 1.5px rgba(59, 130, 246, 0.45)' : '0 0 0 1px rgba(255, 255, 255, 0.08)',
                   }}
                 >
                   <div style={{ fontSize: '13px', fontWeight: '700', color: index === 0 ? '#60A5FA' : '#94A3B8', marginBottom: '8px' }}>
@@ -300,11 +296,10 @@ export default function LeaderboardPage() {
           {/* Full Standings List */}
           <div
             style={{
-              background: '#090A0F',
+              background: '#090A0D',
               borderRadius: '16px',
-              border: '1px solid #1E2330',
               overflow: 'hidden',
-              boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+              boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.08)',
             }}
           >
             <div

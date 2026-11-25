@@ -7,23 +7,29 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: var(--color-surface, #090A0F);
-  border: 1px solid var(--color-border, #1E2330);
+  min-height: 40px;
+  background: var(--color-surface, #090A0D);
+  border: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
   padding: 8px 16px;
   cursor: pointer;
   color: var(--color-text-secondary, #94A3B8);
   font-size: 13px;
   font-weight: 500;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition-property: background-color, box-shadow, color, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
 }
 
 .regen-trigger:hover {
   background: var(--color-surface-raised, #121520);
-  border-color: var(--color-brand, #3B82F6);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
   color: var(--color-text-primary, #F8FAFC);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+}
+
+.regen-trigger:active {
+  transform: scale(0.96);
 }
 
 .regen-trigger-icon {
@@ -161,20 +167,27 @@
 
 .regen-submit {
   padding: 8px 18px;
-  background: var(--color-brand, #3B82F6);
-  border: 1px solid transparent;
+  min-height: 40px;
+  background: #F8FAFC;
+  border: none;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
   border-radius: 8px;
-  color: #fff;
+  color: #09090B;
   font-family: inherit;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition-property: opacity, transform;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
 }
 
 .regen-submit:hover:not(:disabled) {
-  background: var(--color-brand-hover, #2563EB);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+  opacity: 0.9;
+}
+
+.regen-submit:active:not(:disabled) {
+  transform: scale(0.96);
 }
 
 .regen-submit:disabled {

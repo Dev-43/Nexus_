@@ -199,8 +199,8 @@ export default function SubLevelPage() {
       {/* Header Banner */}
       <div
         style={{
-          background: "linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%)",
-          border: "1px solid rgba(245, 158, 11, 0.25)",
+          background: "#090A0D",
+          boxShadow: "0 0 0 1px rgba(245, 158, 11, 0.3)",
           borderRadius: "16px",
           padding: "24px",
           marginBottom: "28px",
@@ -287,7 +287,7 @@ export default function SubLevelPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 18 }}>📚</span>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary, #F8FAFC)" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary, #F8FAFC)", fontVariantNumeric: "tabular-nums" }}>
               {completedCount} of {totalCount} lessons completed
             </div>
             <div style={{ fontSize: 12, color: "var(--color-text-secondary, #94A3B8)" }}>
@@ -329,17 +329,17 @@ export default function SubLevelPage() {
             <div
               key={lesson.id}
               style={{
-                background: isCompleted ? "rgba(16, 185, 129, 0.03)" : "var(--color-surface, #090A0F)",
-                border: `1.5px solid ${
-                  isCompleted
-                    ? "rgba(16, 185, 129, 0.28)"
-                    : isExpanded
-                    ? "var(--color-brand, #3B82F6)"
-                    : "var(--color-border, #1E2330)"
-                }`,
+                background: isCompleted ? "rgba(16, 185, 129, 0.03)" : "var(--color-surface, #090A0D)",
+                boxShadow: isCompleted
+                  ? "0 0 0 1px rgba(16, 185, 129, 0.35)"
+                  : isExpanded
+                  ? "0 0 0 1.5px rgba(59, 130, 246, 0.55)"
+                  : "0 0 0 1px rgba(255, 255, 255, 0.08)",
                 borderRadius: "14px",
                 overflow: "hidden",
-                transition: "all 0.2s ease",
+                transitionProperty: "box-shadow, background-color",
+                transitionDuration: "180ms",
+                transitionTimingFunction: "ease-out",
               }}
             >
               {/* Lesson Card Header */}

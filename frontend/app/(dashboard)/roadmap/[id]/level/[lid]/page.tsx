@@ -480,8 +480,8 @@ export default function LevelContentPage() {
       {/* Header Banner */}
       <div
         style={{
-          background: "linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(139, 92, 246, 0.04) 100%)",
-          border: "1px solid rgba(59, 130, 246, 0.22)",
+          background: "#090A0D",
+          boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.08)",
           borderRadius: "16px",
           padding: "24px",
           marginBottom: "24px",
@@ -541,7 +541,7 @@ export default function LevelContentPage() {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span style={{ fontSize: 18 }}>📚</span>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary, #F8FAFC)" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: "var(--color-text-primary, #F8FAFC)", fontVariantNumeric: "tabular-nums" }}>
               {reviewedCount} of {totalResources} resources reviewed
             </div>
             <div style={{ fontSize: 12, color: "var(--color-text-secondary, #94A3B8)" }}>
@@ -589,18 +589,17 @@ export default function LevelContentPage() {
               style={{
                 background: isReviewed
                   ? "rgba(16, 185, 129, 0.03)"
-                  : "var(--color-surface, #090A0F)",
-                border: `1.5px solid ${
-                  isReviewed
-                    ? "rgba(16, 185, 129, 0.28)"
-                    : isExpanded
-                    ? "var(--color-brand, #3B82F6)"
-                    : "var(--color-border, #1E2330)"
-                }`,
+                  : "var(--color-surface, #090A0D)",
+                boxShadow: isReviewed
+                  ? "0 0 0 1px rgba(16, 185, 129, 0.35)"
+                  : isExpanded
+                  ? "0 0 0 1.5px rgba(59, 130, 246, 0.55)"
+                  : "0 0 0 1px rgba(255, 255, 255, 0.08)",
                 borderRadius: "14px",
                 overflow: "hidden",
-                transition: "all 0.2s ease",
-                boxShadow: isExpanded ? "0 8px 24px rgba(0, 0, 0, 0.4)" : "none",
+                transitionProperty: "box-shadow, background-color",
+                transitionDuration: "180ms",
+                transitionTimingFunction: "ease-out",
               }}
             >
               {/* Card Header (Click to Expand / Collapse) */}
@@ -867,17 +866,16 @@ export default function LevelContentPage() {
       {!showGateTest ? (
         <div
           style={{
-            background: allReviewed
-              ? "linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%)"
-              : "var(--color-surface, #090A0F)",
-            border: `2px solid ${
-              allReviewed ? "var(--color-brand, #3B82F6)" : "var(--color-border, #1E2330)"
-            }`,
+            background: "var(--color-surface, #090A0D)",
+            boxShadow: allReviewed
+              ? "0 0 0 1.5px rgba(59, 130, 246, 0.5)"
+              : "0 0 0 1px rgba(255, 255, 255, 0.08)",
             borderRadius: "16px",
             padding: "28px 24px",
             textAlign: "center",
-            transition: "all 0.3s ease",
-            boxShadow: allReviewed ? "0 0 32px rgba(59, 130, 246, 0.18)" : "none",
+            transitionProperty: "box-shadow, background-color",
+            transitionDuration: "200ms",
+            transitionTimingFunction: "ease-out",
           }}
         >
           <div

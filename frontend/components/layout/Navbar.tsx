@@ -83,17 +83,17 @@ export default function Navbar() {
           >
             <div
               style={{
-                width: "32px",
-                height: "32px",
-                borderRadius: "8px",
-                background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
+                width: "30px",
+                height: "30px",
+                borderRadius: "7px",
+                background: "#141418",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 0 16px rgba(59, 130, 246, 0.35)",
+                boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.12)",
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="12 2 2 7 12 12 22 7 12 2" />
                 <polyline points="2 17 12 22 22 17" />
                 <polyline points="2 12 12 17 22 12" />
@@ -101,29 +101,14 @@ export default function Navbar() {
             </div>
             <span
               style={{
-                fontSize: "19px",
-                fontWeight: 800,
+                fontSize: "18px",
+                fontWeight: 700,
                 color: colors.textPrimary,
-                letterSpacing: "-0.03em",
+                letterSpacing: "-0.02em",
                 fontFamily: typography.fontDisplay,
               }}
             >
               Nexus
-            </span>
-            <span
-              style={{
-                fontSize: "11px",
-                fontWeight: 600,
-                color: colors.brand,
-                background: "rgba(59, 130, 246, 0.12)",
-                padding: "2px 7px",
-                borderRadius: "999px",
-                border: "1px solid rgba(59, 130, 246, 0.25)",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-              }}
-            >
-              AI Engine
             </span>
           </Link>
 
@@ -135,14 +120,17 @@ export default function Navbar() {
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
-                padding: "6px 12px",
-                borderRadius: radius.md,
+                minHeight: "40px",
+                padding: "0 12px",
+                borderRadius: radius.sm,
                 fontSize: "13px",
                 fontWeight: 550,
-                color: isHome ? colors.brand : colors.textSecondary,
-                backgroundColor: isHome ? "rgba(59, 130, 246, 0.08)" : "transparent",
+                color: isHome ? colors.textPrimary : colors.textSecondary,
+                backgroundColor: isHome ? "rgba(255, 255, 255, 0.08)" : "transparent",
                 textDecoration: "none",
-                transition: "all 0.15s ease",
+                transitionProperty: "background-color, color",
+                transitionDuration: "150ms",
+                transitionTimingFunction: "ease-out",
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -158,14 +146,17 @@ export default function Navbar() {
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
-                padding: "6px 12px",
-                borderRadius: radius.md,
+                minHeight: "40px",
+                padding: "0 12px",
+                borderRadius: radius.sm,
                 fontSize: "13px",
                 fontWeight: 550,
-                color: isLeaderboard ? colors.brand : colors.textSecondary,
-                backgroundColor: isLeaderboard ? "rgba(59, 130, 246, 0.08)" : "transparent",
+                color: isLeaderboard ? colors.textPrimary : colors.textSecondary,
+                backgroundColor: isLeaderboard ? "rgba(255, 255, 255, 0.08)" : "transparent",
                 textDecoration: "none",
-                transition: "all 0.15s ease",
+                transitionProperty: "background-color, color",
+                transitionDuration: "150ms",
+                transitionTimingFunction: "ease-out",
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -211,7 +202,8 @@ export default function Navbar() {
                       height: "28px",
                       borderRadius: "50%",
                       objectFit: "cover",
-                      border: "1px solid rgba(255, 255, 255, 0.15)",
+                      outline: "1px solid rgba(255, 255, 255, 0.1)",
+                      outlineOffset: "-1px",
                     }}
                   />
                 ) : (
@@ -220,13 +212,15 @@ export default function Navbar() {
                       width: "28px",
                       height: "28px",
                       borderRadius: "50%",
-                      background: "linear-gradient(135deg, #3B82F6, #10B981)",
+                      background: "#2563EB",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: "12px",
                       fontWeight: 700,
                       color: "#FFFFFF",
+                      outline: "1px solid rgba(255, 255, 255, 0.1)",
+                      outlineOffset: "-1px",
                     }}
                   >
                     {(userEmail[0] || "U").toUpperCase()}

@@ -71,12 +71,13 @@ export function Card({
   const containerStyle: React.CSSProperties = {
     position: "relative",
     background: cfg?.bg ?? "var(--color-surface)",
-    border: `1.5px solid ${cfg?.border ?? "var(--color-border)"}`,
+    border: isLevel ? `1.5px solid ${cfg?.border ?? "var(--color-border)"}` : "none",
     borderRadius: "var(--radius-md)", padding: "20px", overflow: "hidden",
     cursor: isClickable ? "pointer" : "default",
-    boxShadow: hovered && isClickable ? "var(--shadow-card-hover)" : "var(--shadow-card)",
-    transform: hovered && isClickable ? "translateY(-2px)" : "none",
-    transition: "box-shadow var(--transition-normal), border-color var(--transition-normal), transform var(--transition-fast)",
+    boxShadow: isLevel ? "none" : (hovered && isClickable ? "var(--shadow-card-hover)" : "var(--shadow-card)"),
+    transitionProperty: "box-shadow, border-color, transform",
+    transitionDuration: "150ms",
+    transitionTimingFunction: "ease-out",
     userSelect: "none", ...style,
   };
 

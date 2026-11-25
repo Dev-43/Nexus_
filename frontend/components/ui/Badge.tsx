@@ -15,14 +15,14 @@ interface BadgeProps {
 }
 
 const tierConfig = {
-  bronze:    { emoji: "🥉", label: "Bronze",      bg: "#3A200A", border: "#D4834A", color: "#FFD4A8", glow: "0 0 20px rgba(212,131,74,0.45)"  },
-  silver:    { emoji: "🥈", label: "Silver",      bg: "#1E2535", border: "#9EB0CC", color: "#D6E4F0", glow: "0 0 20px rgba(158,176,204,0.40)" },
-  gold:      { emoji: "🥇", label: "Gold",        bg: "#2E1F02", border: "#D4A827", color: "#FFECAA", glow: "0 0 24px rgba(212,168,39,0.50)"  },
-  diamond:   { emoji: "💎", label: "Diamond",     bg: "#0D1E2E", border: "#60C8E8", color: "#B8EEFF", glow: "0 0 28px rgba(96,200,232,0.55)"  },
-  streak:    { emoji: "🔥", label: "7-Day Streak",bg: "#2E1408", border: "#FF6B35", color: "#FFB899", glow: "0 0 20px rgba(255,107,53,0.40)"  },
-  first:     { emoji: "⭐", label: "First Skill", bg: "#1E1A2E", border: "#9C6FE8", color: "#D4B8FF", glow: "0 0 20px rgba(156,111,232,0.40)" },
-  speed:     { emoji: "⚡", label: "Speed Runner",bg: "#1A2010", border: "#8BCB3E", color: "#C8F0A0", glow: "0 0 20px rgba(139,203,62,0.40)"  },
-  "no-hints":{ emoji: "🎯", label: "No Hints",    bg: "#1A1E2E", border: "#6C63FF", color: "#C0BCFF", glow: "0 0 20px rgba(108,99,255,0.45)"  },
+  bronze:    { emoji: "🥉", label: "Bronze",      bg: "#261608", border: "rgba(212,131,74,0.4)",  color: "#FFD4A8" },
+  silver:    { emoji: "🥈", label: "Silver",      bg: "#181D29", border: "rgba(158,176,204,0.4)", color: "#D6E4F0" },
+  gold:      { emoji: "🥇", label: "Gold",        bg: "#241904", border: "rgba(212,168,39,0.4)",  color: "#FFECAA" },
+  diamond:   { emoji: "💎", label: "Diamond",     bg: "#0D1A26", border: "rgba(96,200,232,0.4)",  color: "#B8EEFF" },
+  streak:    { emoji: "🔥", label: "7-Day Streak",bg: "#241208", border: "rgba(255,107,53,0.4)",  color: "#FFB899" },
+  first:     { emoji: "⭐", label: "First Skill", bg: "#1B1726", border: "rgba(156,111,232,0.4)", color: "#D4B8FF" },
+  speed:     { emoji: "⚡", label: "Speed Runner",bg: "#171D0F", border: "rgba(139,203,62,0.4)",  color: "#C8F0A0" },
+  "no-hints":{ emoji: "🎯", label: "No Hints",    bg: "#171A26", border: "rgba(108,99,255,0.4)",  color: "#C0BCFF" },
 };
 
 const sizeConfig = {
@@ -64,10 +64,10 @@ export function Badge({ tier, size = "md", showLabel = false, animate = false, e
     <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "center", gap: "8px", opacity: earned ? 1 : 0.3, filter: earned ? "none" : "grayscale(1)", ...style }}>
       <div style={{
         width: sz.outer, height: sz.outer, borderRadius: "50%",
-        background: cfg.bg, border: `2px solid ${cfg.border}`,
+        background: cfg.bg, border: `1px solid ${cfg.border}`,
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: sz.emoji, boxShadow: earned ? cfg.glow : "none",
-        animation: animate && ready && earned ? "nexus-badge-in 0.55s var(--transition-spring) forwards, nexus-badge-pulse 2.4s ease-in-out 0.6s infinite" : "none",
+        fontSize: sz.emoji, boxShadow: "0 0 0 1px rgba(255,255,255,0.06)",
+        animation: animate && ready && earned ? "nexus-badge-in 0.55s var(--transition-spring) forwards" : "none",
         transform: animate && !ready ? "scale(0.4)" : "none",
         opacity:   animate && !ready ? 0 : 1,
       }} title={cfg.label}>

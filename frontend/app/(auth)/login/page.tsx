@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
@@ -10,7 +11,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [checkingSession, setCheckingSession] = useState(true);
 
-  // If already signed in, skip to dashboard
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -40,7 +40,6 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     }
-    // On success, Supabase redirects automatically — no need to setLoading(false)
   };
 
   if (checkingSession) {
@@ -54,38 +53,23 @@ export default function LoginPage() {
 
   return (
     <div style={styles.page}>
-      <style>{spinKeyframes}{floatKeyframes}</style>
-
-      {/* Background grid */}
-      <div style={styles.gridOverlay} aria-hidden />
-
-      {/* Glow orb */}
-      <div style={styles.glowOrb} aria-hidden />
+      <style>{spinKeyframes}{buttonCss}</style>
 
       <main style={styles.card}>
-        {/* Logo mark */}
-        <div style={styles.logoMark} aria-hidden>
-          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-            <rect width="40" height="40" rx="10" fill="#3B82F6" fillOpacity="0.15" />
-            <path
-              d="M20 8L32 14V22C32 28.627 26.627 34 20 34C13.373 34 8 28.627 8 22V14L20 8Z"
-              stroke="#3B82F6"
-              strokeWidth="1.5"
-              fill="none"
-            />
-            <circle cx="20" cy="22" r="5" fill="#3B82F6" fillOpacity="0.8" />
-            <circle cx="20" cy="22" r="2.5" fill="#60A5FA" />
-          </svg>
-        </div>
+        <Link href="/" style={styles.brandRow} aria-label="Back to Nexus home">
+          <div style={styles.logoMark} aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#F8FAFC" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2" />
+              <polyline points="2 17 12 22 22 17" />
+              <polyline points="2 12 12 17 22 12" />
+            </svg>
+          </div>
+          <span style={styles.wordmark}>Nexus</span>
+        </Link>
 
-        <h1 style={styles.wordmark}>Nexus</h1>
-        <p style={styles.tagline}>Learn how you learn.</p>
-
-        <div style={styles.divider} />
-
+        <h1 style={styles.heading}>Sign in to continue</h1>
         <p style={styles.body}>
-          Your AI learning partner. Nexus figures out your level, adapts to
-          how you think, and builds a roadmap that actually fits you.
+          Access your personalised skill roadmaps, gate tests, and progress history.
         </p>
 
         {error && (
@@ -97,6 +81,7 @@ export default function LoginPage() {
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
+          className="login-google-btn"
           style={{
             ...styles.googleButton,
             opacity: loading ? 0.7 : 1,
@@ -107,28 +92,20 @@ export default function LoginPage() {
           {loading ? (
             <>
               <div style={styles.buttonSpinner} />
-              Connecting…
+              <span>Connecting…</span>
             </>
           ) : (
             <>
               <GoogleIcon />
-              Sign in with Google
+              <span>Continue with Google</span>
             </>
           )}
         </button>
 
         <p style={styles.footnote}>
-          By signing in you agree to our terms. No data is shared with third
-          parties. Your roadmap is yours.
+          Your progress and roadmaps remain private to your account.
         </p>
       </main>
-
-      {/* Feature pills */}
-      <div style={styles.pills} aria-hidden>
-        {['Adapts to your level', 'Correctable by you', 'Tracks what you miss'].map((label) => (
-          <span key={label} style={styles.pill}>{label}</span>
-        ))}
-      </div>
     </div>
   );
 }
@@ -153,78 +130,61 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '24px',
-    position: 'relative',
-    overflow: 'hidden',
-  },
-  gridOverlay: {
-    position: 'absolute',
-    inset: 0,
-    backgroundImage: `
-      linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px)
-    `,
-    backgroundSize: '48px 48px',
-    pointerEvents: 'none',
-  },
-  glowOrb: {
-    position: 'absolute',
-    top: '-20%',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    width: '600px',
-    height: '400px',
-    background: 'radial-gradient(ellipse, rgba(59,130,246,0.14) 0%, transparent 70%)',
-    pointerEvents: 'none',
   },
   card: {
-    position: 'relative',
     width: '100%',
-    maxWidth: '400px',
-    background: '#090A0F',
-    border: '1px solid #1E2330',
-    borderRadius: '20px',
-    padding: '40px 36px',
+    maxWidth: '390px',
+    background: '#090A0D',
+    boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.09)',
+    borderRadius: '16px',
+    padding: '36px 32px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '16px',
-    boxShadow: '0 24px 64px rgba(0,0,0,0.85)',
+    gap: '14px',
+  },
+  brandRow: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '10px',
+    textDecoration: 'none',
+    marginBottom: '6px',
   },
   logoMark: {
-    animation: 'float 3s ease-in-out infinite',
+    width: '36px',
+    height: '36px',
+    borderRadius: '9px',
+    background: '#14161D',
+    boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.12)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   wordmark: {
-    fontSize: '28px',
+    fontSize: '20px',
     fontWeight: '700',
     color: '#F8FAFC',
-    letterSpacing: '-0.5px',
-    marginTop: '-4px',
+    letterSpacing: '-0.02em',
   },
-  tagline: {
-    fontSize: '13px',
+  heading: {
+    fontSize: '18px',
     fontWeight: '600',
-    color: '#3B82F6',
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    marginTop: '-8px',
-  },
-  divider: {
-    width: '100%',
-    height: '1px',
-    background: '#1E2330',
-    margin: '4px 0',
+    color: '#F8FAFC',
+    margin: 0,
+    textAlign: 'center',
   },
   body: {
     fontSize: '14px',
     lineHeight: '1.6',
     color: '#94A3B8',
     textAlign: 'center',
+    margin: '0 0 6px 0',
   },
   errorBox: {
     width: '100%',
     padding: '12px 16px',
     background: 'rgba(239,68,68,0.1)',
-    border: '1px solid rgba(239,68,68,0.3)',
+    boxShadow: '0 0 0 1px rgba(239,68,68,0.3)',
     borderRadius: '8px',
     fontSize: '13px',
     color: '#F87171',
@@ -232,32 +192,33 @@ const styles: Record<string, React.CSSProperties> = {
   },
   googleButton: {
     width: '100%',
+    minHeight: '46px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     gap: '10px',
-    padding: '13px 20px',
+    padding: '12px 20px',
     background: '#F8FAFC',
-    color: '#000000',
+    color: '#09090B',
     border: 'none',
     borderRadius: '10px',
-    fontSize: '15px',
+    fontSize: '14.5px',
     fontWeight: '600',
-    transition: '120ms ease',
     marginTop: '4px',
   },
   footnote: {
-    fontSize: '11px',
+    fontSize: '12px',
     color: '#64748B',
     textAlign: 'center',
-    lineHeight: '1.6',
+    lineHeight: '1.5',
+    margin: '4px 0 0 0',
   },
   spinner: {
-    width: '32px',
-    height: '32px',
+    width: '28px',
+    height: '28px',
     borderRadius: '50%',
-    border: '2px solid #1E2330',
-    borderTopColor: '#3B82F6',
+    border: '2px solid rgba(255,255,255,0.12)',
+    borderTopColor: '#F8FAFC',
     animation: 'spin 0.8s linear infinite',
   },
   buttonSpinner: {
@@ -269,27 +230,19 @@ const styles: Record<string, React.CSSProperties> = {
     animation: 'spin 0.8s linear infinite',
     flexShrink: 0,
   },
-  pills: {
-    position: 'relative',
-    display: 'flex',
-    gap: '8px',
-    marginTop: '24px',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-  },
-  pill: {
-    padding: '5px 12px',
-    background: 'rgba(59,130,246,0.1)',
-    border: '1px solid rgba(59,130,246,0.25)',
-    borderRadius: '9999px',
-    fontSize: '11px',
-    color: '#60A5FA',
-    fontWeight: '600',
-  },
 };
 
 const spinKeyframes = `@keyframes spin { to { transform: rotate(360deg); } }`;
-const floatKeyframes = `@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-}`;
+const buttonCss = `
+  .login-google-btn {
+    transition-property: opacity, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease-out;
+  }
+  .login-google-btn:hover:not(:disabled) {
+    opacity: 0.92 !important;
+  }
+  .login-google-btn:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+`;

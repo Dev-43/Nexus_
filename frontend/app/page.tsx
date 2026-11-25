@@ -3,11 +3,93 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
-import { colors, typography } from "@/design/tokens";
+import { typography } from "@/design/tokens";
+
+type SpecimenTab = "calibrate" | "study" | "gate";
+
+const SPECIMEN_CONTENT: Record<
+  SpecimenTab,
+  {
+    label: string;
+    meta: string;
+    title: string;
+    body: string;
+    code?: string;
+    metrics: { label: string; value: string }[];
+  }
+> = {
+  calibrate: {
+    label: "Diagnostic",
+    meta: "ADAPTIVE ASSESSMENT · Q2 OF 5",
+    title: "Calibrates to your current depth in real time",
+    body: "Questions adjust difficulty after every answer. Skip fundamentals you already know and start your roadmap at the right tier.",
+    code: "score = 0.80  # → Intermediate tier unlocked\nfocus_gaps = ['window_functions', 'query_plans']",
+    metrics: [
+      { label: "Calibration", value: "80%" },
+      { label: "Tier placed", value: "Intermediate" },
+      { label: "Time spent", value: "2m 10s" },
+    ],
+  },
+  study: {
+    label: "Stage Study",
+    meta: "LEVEL 01 · 4 RESOURCES",
+    title: "Structured documentation, rules, and code drills",
+    body: "Every stage organizes official docs, key engineering rules, runnable patterns, and a focused drill instead of a single generic link.",
+    code: "SELECT user_id, COUNT(o.id) AS orders\nFROM users u LEFT JOIN orders o ON u.id = o.user_id\nWHERE u.created_at >= '2026-01-01'\nGROUP BY user_id HAVING COUNT(o.id) >= 3;",
+    metrics: [
+      { label: "Reviewed", value: "3 / 4" },
+      { label: "Est. time", value: "15m" },
+      { label: "Regenerate", value: "Steerable" },
+    ],
+  },
+  gate: {
+    label: "Gate & Sublevel",
+    meta: "GATE THRESHOLD · 70% TO UNLOCK",
+    title: "Targeted remediation when a concept trips you up",
+    body: "Score 70% or higher to unlock the next level and earn XP. Miss a concept and Nexus builds focused micro-lessons for those exact gaps.",
+    code: "missed_tags = ['data_cleaning', 'distribution_analysis']\n# Spawns 3 focused micro-lessons + code examples",
+    metrics: [
+      { label: "Pass bar", value: "70%" },
+      { label: "XP reward", value: "+75 XP" },
+      { label: "Gap lessons", value: "3" },
+    ],
+  },
+};
+
+const ARCHITECTURE_ROWS = [
+  {
+    index: "01",
+    title: "Adaptive baseline, not a fixed syllabus",
+    detail:
+      "A 5-question adaptive diagnostic maps your actual score before generating levels, so experienced developers don't start at hello world.",
+  },
+  {
+    index: "02",
+    title: "Steerable roadmaps you can correct",
+    detail:
+      "If a generated level misses what you want to focus on, describe what to change in plain English and rebuild the curriculum around your goal.",
+  },
+  {
+    index: "03",
+    title: "Gate checks backed by gap remediation",
+    detail:
+      "Each stage ends with a gate test. Failing a topic generates targeted mini-lessons on the specific concepts you missed before your next attempt.",
+  },
+];
+
+const TRACKS = [
+  "Data Analysis",
+  "Python",
+  "SQL",
+  "JavaScript",
+  "React & Next.js",
+  "System Design",
+];
 
 export default function LandingPage() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<SpecimenTab>("calibrate");
 
   useEffect(() => {
     let cancelled = false;
@@ -22,7 +104,7 @@ export default function LandingPage() {
           setUserEmail(session.user.email || null);
         }
       } catch {
-        // Non-blocking check — landing page stays public
+        // Non-blocking auth check
       }
     }
     checkAuth();
@@ -32,99 +114,22 @@ export default function LandingPage() {
   }, []);
 
   const primaryHref = isSignedIn ? "/dashboard" : "/login";
+  const currentSpecimen = SPECIMEN_CONTENT[activeTab];
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#000000",
-        color: colors.textPrimary,
-        fontFamily: typography.fontBody,
-        position: "relative",
-        overflowX: "hidden",
-      }}
-    >
-      {/* Subtle architectural background grid & top cobalt glow */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: "fixed",
-          inset: 0,
-          backgroundImage:
-            "linear-gradient(rgba(59, 130, 246, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(59, 130, 246, 0.035) 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: "absolute",
-          top: "-180px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "900px",
-          height: "520px",
-          background:
-            "radial-gradient(ellipse at center, rgba(59, 130, 246, 0.16) 0%, rgba(139, 92, 246, 0.06) 45%, transparent 72%)",
-          pointerEvents: "none",
-          zIndex: 0,
-        }}
-      />
-
-      {/* ── Public Top Navbar ── */}
-      <header
-        style={{
-          position: "sticky",
-          top: 0,
-          zIndex: 50,
-          backgroundColor: "rgba(0, 0, 0, 0.82)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom: `1px solid ${colors.border}`,
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1160px",
-            margin: "0 auto",
-            height: "68px",
-            padding: "0 24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Brand */}
-          <Link
-            href="/"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              textDecoration: "none",
-            }}
-          >
-            <div
-              style={{
-                width: "34px",
-                height: "34px",
-                borderRadius: "9px",
-                background: "linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 0 18px rgba(59, 130, 246, 0.4)",
-              }}
-            >
+    <div className="lp-root">
+      {/* ── Top Bar ── */}
+      <header className="lp-header">
+        <div className="lp-header-inner">
+          <Link href="/" className="lp-brand">
+            <span className="lp-brand-mark" aria-hidden="true">
               <svg
-                width="18"
-                height="18"
+                width="16"
+                height="16"
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="white"
-                strokeWidth="2.5"
+                stroke="#F8FAFC"
+                strokeWidth="2.2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
@@ -132,108 +137,37 @@ export default function LandingPage() {
                 <polyline points="2 17 12 22 22 17" />
                 <polyline points="2 12 12 17 22 12" />
               </svg>
-            </div>
-            <span
-              style={{
-                fontSize: "20px",
-                fontWeight: 800,
-                color: colors.textPrimary,
-                letterSpacing: "-0.03em",
-                fontFamily: typography.fontDisplay,
-              }}
-            >
-              Nexus
             </span>
-            <span
-              style={{
-                fontSize: "10px",
-                fontWeight: 700,
-                color: colors.brand,
-                background: "rgba(59, 130, 246, 0.12)",
-                padding: "2px 8px",
-                borderRadius: "999px",
-                border: "1px solid rgba(59, 130, 246, 0.28)",
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-              }}
-            >
-              AI Engine
-            </span>
+            <span className="lp-brand-name">Nexus</span>
           </Link>
 
-          {/* Center links */}
-          <nav
-            className="landing-nav-links"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "28px",
-              fontSize: "14px",
-              color: colors.textSecondary,
-            }}
-          >
-            <a href="#how-it-works" style={{ color: "inherit", textDecoration: "none" }}>
-              How it works
+          <nav className="lp-nav" aria-label="Primary">
+            <a href="#architecture" className="lp-nav-link">
+              Architecture
             </a>
-            <a href="#features" style={{ color: "inherit", textDecoration: "none" }}>
-              Features
-            </a>
-            <a href="#tracks" style={{ color: "inherit", textDecoration: "none" }}>
+            <a href="#tracks" className="lp-nav-link">
               Tracks
             </a>
           </nav>
 
-          {/* Right CTAs */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <div className="lp-header-actions">
             {isSignedIn ? (
               <Link
                 href="/dashboard"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "9px 18px",
-                  borderRadius: "10px",
-                  background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-                  color: "#FFFFFF",
-                  fontSize: "13px",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  boxShadow: "0 0 20px rgba(59, 130, 246, 0.35)",
-                }}
-                title={userEmail || "Go to Dashboard"}
+                className="lp-btn-primary lp-btn-sm"
+                title={userEmail || "Open dashboard"}
               >
-                Open Dashboard →
+                <span>Dashboard</span>
+                <ArrowRightIcon />
               </Link>
             ) : (
               <>
-                <Link
-                  href="/login"
-                  style={{
-                    padding: "8px 14px",
-                    borderRadius: "9px",
-                    fontSize: "13px",
-                    fontWeight: 500,
-                    color: colors.textSecondary,
-                    textDecoration: "none",
-                  }}
-                >
-                  Sign In
+                <Link href="/login" className="lp-btn-ghost">
+                  Sign in
                 </Link>
-                <Link
-                  href="/login"
-                  style={{
-                    padding: "9px 18px",
-                    borderRadius: "10px",
-                    background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-                    color: "#FFFFFF",
-                    fontSize: "13px",
-                    fontWeight: 600,
-                    textDecoration: "none",
-                    boxShadow: "0 0 20px rgba(59, 130, 246, 0.32)",
-                  }}
-                >
-                  Get Started →
+                <Link href="/login" className="lp-btn-primary lp-btn-sm">
+                  <span>Get started</span>
+                  <ArrowRightIcon />
                 </Link>
               </>
             )}
@@ -241,617 +175,658 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* ── Main Content ── */}
-      <main style={{ position: "relative", zIndex: 1 }}>
-        {/* ── Hero Section ── */}
-        <section
-          style={{
-            maxWidth: "1160px",
-            margin: "0 auto",
-            padding: "84px 24px 64px",
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-            gap: "48px",
-            alignItems: "center",
-          }}
-        >
-          {/* Hero Copy */}
-          <div>
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "5px 12px",
-                borderRadius: "999px",
-                background: "rgba(59, 130, 246, 0.1)",
-                border: "1px solid rgba(59, 130, 246, 0.28)",
-                fontSize: "12px",
-                fontWeight: 600,
-                color: "#60A5FA",
-                marginBottom: "20px",
-              }}
-            >
-              <span
-                style={{
-                  width: "7px",
-                  height: "7px",
-                  borderRadius: "50%",
-                  backgroundColor: "#10B981",
-                  boxShadow: "0 0 8px #10B981",
-                }}
-              />
-              Adaptive Skill Mastery · Real-Time Curriculum Engine
-            </div>
-
-            <h1
-              style={{
-                fontFamily: typography.fontDisplay,
-                fontSize: "clamp(2.25rem, 4.5vw, 3.35rem)",
-                fontWeight: 700,
-                lineHeight: 1.12,
-                letterSpacing: "-0.03em",
-                color: colors.textPrimary,
-                margin: "0 0 20px 0",
-              }}
-            >
-              Learn how you learn.{" "}
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #60A5FA 0%, #3B82F6 45%, #10B981 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                }}
-              >
-                Master skills faster.
-              </span>
-            </h1>
-
-            <p
-              style={{
-                fontSize: "17px",
-                lineHeight: 1.65,
-                color: colors.textSecondary,
-                margin: "0 0 32px 0",
-                maxWidth: "540px",
-              }}
-            >
-              Stop grinding generic tutorials. Nexus diagnoses your real skill level in minutes,
-              generates a structured roadmap with live code drills, and adapts automatically when
-              you hit a knowledge gap.
+      <main className="lp-main">
+        {/* ── Editorial Hero + Interactive Product Specimen ── */}
+        <section className="lp-hero">
+          <div className="lp-hero-copy">
+            <p className="lp-eyebrow lp-stagger-1">
+              Adaptive curriculum engine
             </p>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
-              <Link
-                href={primaryHref}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "13px 26px",
-                  borderRadius: "12px",
-                  background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-                  color: "#FFFFFF",
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                  boxShadow: "0 8px 28px rgba(59, 130, 246, 0.35)",
-                }}
-              >
-                {isSignedIn ? "Continue to Dashboard →" : "Start Your Roadmap →"}
+            <h1 className="lp-h1 lp-stagger-2">
+              Master technical skills without relearning what you already know.
+            </h1>
+            <p className="lp-lead lp-stagger-3">
+              Nexus diagnoses your real skill level, generates a structured roadmap with
+              curated docs and code drills, and targets the exact concepts you miss on
+              gate tests.
+            </p>
+            <div className="lp-cta-row lp-stagger-4">
+              <Link href={primaryHref} className="lp-btn-primary lp-btn-lg">
+                <span>
+                  {isSignedIn ? "Open your dashboard" : "Start your assessment"}
+                </span>
+                <ArrowRightIcon />
               </Link>
-              <a
-                href="#how-it-works"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "13px 22px",
-                  borderRadius: "12px",
-                  background: colors.surface,
-                  border: `1px solid ${colors.border}`,
-                  color: colors.textPrimary,
-                  fontSize: "15px",
-                  fontWeight: 500,
-                  textDecoration: "none",
-                }}
-              >
-                See how it works
+              <a href="#architecture" className="lp-btn-secondary lp-btn-lg">
+                How it adapts
               </a>
             </div>
+          </div>
 
-            {/* Trust / Metrics Strip */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "28px",
-                marginTop: "36px",
-                paddingTop: "24px",
-                borderTop: `1px solid ${colors.border}`,
-                flexWrap: "wrap",
-              }}
-            >
-              {[
-                { val: "Adaptive", lbl: "Real-time skill calibration" },
-                { val: "70% Gate", lbl: "Verified mastery unlocks" },
-                { val: "Sublevels", lbl: "Auto-generated gap fixes" },
-              ].map((stat) => (
-                <div key={stat.val}>
-                  <div
-                    style={{
-                      fontSize: "16px",
-                      fontWeight: 700,
-                      color: colors.textPrimary,
-                      fontFamily: typography.fontDisplay,
-                    }}
+          {/* Interactive Specimen (concentric radii: outer 16px, padding 8px -> inner 8px) */}
+          <div className="lp-specimen lp-stagger-4">
+            <div className="lp-tab-list" role="tablist" aria-label="Product workflow">
+              {(["calibrate", "study", "gate"] as SpecimenTab[]).map((key) => {
+                const isSelected = activeTab === key;
+                return (
+                  <button
+                    key={key}
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => setActiveTab(key)}
+                    className={`lp-tab ${isSelected ? "lp-tab--active" : ""}`}
                   >
-                    {stat.val}
+                    {SPECIMEN_CONTENT[key].label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="lp-specimen-panel" role="tabpanel">
+              <div className="lp-specimen-meta">{currentSpecimen.meta}</div>
+              <h2 className="lp-specimen-title">{currentSpecimen.title}</h2>
+              <p className="lp-specimen-body">{currentSpecimen.body}</p>
+
+              {currentSpecimen.code && (
+                <pre className="lp-code">
+                  <code>{currentSpecimen.code}</code>
+                </pre>
+              )}
+
+              <div className="lp-metrics-row">
+                {currentSpecimen.metrics.map((m) => (
+                  <div key={m.label} className="lp-metric-cell">
+                    <div className="lp-metric-val tabular-nums">{m.value}</div>
+                    <div className="lp-metric-lbl">{m.label}</div>
                   </div>
-                  <div style={{ fontSize: "12px", color: colors.textMuted }}>{stat.lbl}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Hero Visual Product Preview Card */}
-          <div
-            style={{
-              background: "#090A0F",
-              border: `1px solid ${colors.border}`,
-              borderRadius: "20px",
-              padding: "24px",
-              boxShadow: "0 24px 72px rgba(0, 0, 0, 0.85), 0 0 40px rgba(59, 130, 246, 0.08)",
-              position: "relative",
-            }}
-          >
-            {/* Window Header */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                paddingBottom: "16px",
-                marginBottom: "18px",
-                borderBottom: `1px solid ${colors.border}`,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444" }} />
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B" }} />
-                <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981" }} />
-                <span
-                  style={{
-                    marginLeft: "8px",
-                    fontSize: "12px",
-                    color: colors.textMuted,
-                    fontFamily: typography.fontMono,
-                  }}
-                >
-                  roadmap // data-analysis
-                </span>
-              </div>
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: 600,
-                  color: "#10B981",
-                  background: "rgba(16, 185, 129, 0.12)",
-                  border: "1px solid rgba(16, 185, 129, 0.28)",
-                  padding: "2px 9px",
-                  borderRadius: "999px",
-                }}
-              >
-                80% Calibrated
-              </span>
-            </div>
-
-            {/* Preview Stage 1 */}
-            <div
-              style={{
-                background: colors.surfaceRaised,
-                border: "1px solid rgba(59, 130, 246, 0.4)",
-                borderRadius: "14px",
-                padding: "16px",
-                marginBottom: "12px",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "8px",
-                }}
-              >
-                <span style={{ fontSize: "12px", fontWeight: 700, color: "#60A5FA" }}>
-                  STAGE 01 · UNLOCKED
-                </span>
-                <span style={{ fontSize: "11px", color: colors.textMuted }}>4 resources · 15m</span>
-              </div>
-              <div
-                style={{
-                  fontSize: "15px",
-                  fontWeight: 600,
-                  color: colors.textPrimary,
-                  marginBottom: "10px",
-                }}
-              >
-                Data Wrangling & Vectorized Pandas
-              </div>
-              <pre
-                style={{
-                  margin: 0,
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  background: "#030406",
-                  border: "1px solid #1A1F2C",
-                  fontSize: "11px",
-                  color: "#CBD5E1",
-                  fontFamily: typography.fontMono,
-                  overflowX: "auto",
-                }}
-              >
-                <code>{`mask = (df['status'] == 'active') & (df['score'] >= 75)\nclean_df = df.loc[mask, ['user_id', 'score']]`}</code>
-              </pre>
-            </div>
-
-            {/* Preview Stage 2 & Remediation Pill */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: "12px",
-              }}
-            >
-              <div
-                style={{
-                  background: "#050608",
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: "12px",
-                  padding: "14px",
-                }}
-              >
-                <div style={{ fontSize: "11px", color: "#F59E0B", fontWeight: 700, marginBottom: 4 }}>
-                  🎯 GATE TEST
-                </div>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary }}>
-                  4 Adaptive Questions
-                </div>
-                <div style={{ fontSize: "11px", color: colors.textMuted, marginTop: 2 }}>
-                  70%+ unlocks Stage 02
-                </div>
-              </div>
-
-              <div
-                style={{
-                  background: "rgba(245, 158, 11, 0.06)",
-                  border: "1px solid rgba(245, 158, 11, 0.25)",
-                  borderRadius: "12px",
-                  padding: "14px",
-                }}
-              >
-                <div style={{ fontSize: "11px", color: "#FBBF24", fontWeight: 700, marginBottom: 4 }}>
-                  🔍 SUBLEVEL FIX
-                </div>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: colors.textPrimary }}>
-                  Targeted Micro-Lessons
-                </div>
-                <div style={{ fontSize: "11px", color: colors.textMuted, marginTop: 2 }}>
-                  Triggered on missed concepts
-                </div>
+                ))}
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── How It Works (3-Step Adaptive Loop) ── */}
-        <section
-          id="how-it-works"
-          style={{
-            maxWidth: "1160px",
-            margin: "0 auto",
-            padding: "64px 24px",
-          }}
-        >
-          <div style={{ textAlign: "center", marginBottom: "48px" }}>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: 700,
-                textTransform: "uppercase",
-                letterSpacing: "0.1em",
-                color: colors.brand,
-                marginBottom: "10px",
-              }}
-            >
-              The Adaptive Loop
-            </div>
-            <h2
-              style={{
-                fontFamily: typography.fontDisplay,
-                fontSize: "clamp(1.75rem, 3vw, 2.25rem)",
-                fontWeight: 700,
-                margin: "0 0 12px 0",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Built to respect what you already know
-            </h2>
-            <p
-              style={{
-                fontSize: "15px",
-                color: colors.textSecondary,
-                maxWidth: "560px",
-                margin: "0 auto",
-              }}
-            >
-              Every roadmap starts from your diagnostic baseline and evolves based on your gate test
-              performance and direct feedback.
-            </p>
+        {/* ── Architectural Breakdown ── */}
+        <section id="architecture" className="lp-section">
+          <div className="lp-section-head">
+            <p className="lp-eyebrow">Workflow</p>
+            <h2 className="lp-h2">Built around measurement and feedback</h2>
           </div>
 
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-              gap: "20px",
-            }}
-          >
-            {[
-              {
-                num: "01",
-                title: "Diagnostic Calibration",
-                desc: "Answer a short adaptive assessment that scales difficulty in real time based on your responses, pinpointing your Beginner, Intermediate, or Advanced starting tier.",
-                accent: "#3B82F6",
-              },
-              {
-                num: "02",
-                title: "Multi-Resource Stages",
-                desc: "Each level pairs curated documentation, architecture guides, runnable code patterns, and hands-on action drills—and you can regenerate any roadmap with feedback.",
-                accent: "#8B5CF6",
-              },
-              {
-                num: "03",
-                title: "Gate Tests & Gap Sublevels",
-                desc: "Prove mastery with a 70%+ gate test to earn XP and badges. If a concept trips you up, Nexus generates focused mini-lessons targeting that exact gap.",
-                accent: "#10B981",
-              },
-            ].map((step) => (
-              <div
-                key={step.num}
-                style={{
-                  background: colors.surface,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: "16px",
-                  padding: "28px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: typography.fontMono,
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    color: step.accent,
-                    background: `${step.accent}1A`,
-                    border: `1px solid ${step.accent}40`,
-                    padding: "4px 10px",
-                    borderRadius: "8px",
-                    alignSelf: "flex-start",
-                  }}
-                >
-                  STEP {step.num}
-                </span>
-                <h3
-                  style={{
-                    fontFamily: typography.fontDisplay,
-                    fontSize: "19px",
-                    fontWeight: 600,
-                    margin: 0,
-                    color: colors.textPrimary,
-                  }}
-                >
-                  {step.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    lineHeight: 1.65,
-                    color: colors.textSecondary,
-                    margin: 0,
-                  }}
-                >
-                  {step.desc}
-                </p>
+          <div className="lp-arch-list">
+            {ARCHITECTURE_ROWS.map((row) => (
+              <div key={row.index} className="lp-arch-row">
+                <span className="lp-arch-num tabular-nums">{row.index}</span>
+                <h3 className="lp-arch-title">{row.title}</h3>
+                <p className="lp-arch-detail">{row.detail}</p>
               </div>
             ))}
           </div>
         </section>
 
-        {/* ── Features & Tracks ── */}
-        <section
-          id="features"
-          style={{
-            maxWidth: "1160px",
-            margin: "0 auto",
-            padding: "48px 24px 64px",
-          }}
-        >
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-              gap: "16px",
-            }}
-          >
-            {[
-              {
-                icon: "🎯",
-                title: "Learning-Style Aware",
-                desc: "Quick onboarding calibrates pace, explanation depth, and resource format to match how you retain complex ideas.",
-              },
-              {
-                icon: "✍️",
-                title: "Steerable Roadmaps",
-                desc: "Doesn't look right? Give plain-English feedback and rebuild your curriculum around your specific goals.",
-              },
-              {
-                icon: "💻",
-                title: "Code & Action Drills",
-                desc: "Every level card breaks down key engineering rules, syntax examples, and practical exercises before you test.",
-              },
-              {
-                icon: "🏆",
-                title: "XP, Streaks & Tiers",
-                desc: "Earn progression XP, unlock Bronze through Diamond badges, and climb the live learner leaderboard.",
-              },
-            ].map((feat) => (
-              <div
-                key={feat.title}
-                style={{
-                  background: "#05060A",
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: "14px",
-                  padding: "22px",
-                }}
-              >
-                <div style={{ fontSize: "24px", marginBottom: "12px" }}>{feat.icon}</div>
-                <h3
-                  style={{
-                    fontSize: "16px",
-                    fontWeight: 600,
-                    margin: "0 0 8px 0",
-                    color: colors.textPrimary,
-                  }}
-                >
-                  {feat.title}
-                </h3>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    lineHeight: 1.6,
-                    color: colors.textSecondary,
-                    margin: 0,
-                  }}
-                >
-                  {feat.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Popular Tracks Strip ── */}
-        <section
-          id="tracks"
-          style={{
-            maxWidth: "1160px",
-            margin: "0 auto",
-            padding: "24px 24px 80px",
-          }}
-        >
-          <div
-            style={{
-              background:
-                "linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(16, 185, 129, 0.06) 100%)",
-              border: "1px solid rgba(59, 130, 246, 0.25)",
-              borderRadius: "20px",
-              padding: "40px 32px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexWrap: "wrap",
-              gap: "24px",
-            }}
-          >
-            <div style={{ maxWidth: "560px" }}>
-              <h2
-                style={{
-                  fontFamily: typography.fontDisplay,
-                  fontSize: "24px",
-                  fontWeight: 700,
-                  margin: "0 0 10px 0",
-                  color: colors.textPrimary,
-                }}
-              >
-                Ready to build your personalised roadmap?
-              </h2>
-              <p
-                style={{
-                  fontSize: "14px",
-                  lineHeight: 1.6,
-                  color: colors.textSecondary,
-                  margin: "0 0 16px 0",
-                }}
-              >
-                Pick from Data Analysis, Python, SQL, JavaScript, React, or enter any custom skill.
-                Takes less than 2 minutes to calibrate.
+        {/* ── Tracks & Closing Action ── */}
+        <section id="tracks" className="lp-section lp-section--last">
+          <div className="lp-closing">
+            <div className="lp-closing-copy">
+              <h2 className="lp-h2">Pick a track or enter any custom skill</h2>
+              <p className="lp-closing-sub">
+                Choose a curated engineering domain or generate a roadmap for your own
+                topic after signing in.
               </p>
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                {["Data Analysis", "Python", "SQL", "JavaScript", "System Design"].map((tag) => (
-                  <span
-                    key={tag}
-                    style={{
-                      fontSize: "12px",
-                      padding: "4px 10px",
-                      borderRadius: "999px",
-                      background: "rgba(0, 0, 0, 0.45)",
-                      border: `1px solid ${colors.border}`,
-                      color: colors.textSecondary,
-                    }}
-                  >
-                    {tag}
+              <div className="lp-track-list">
+                {TRACKS.map((track) => (
+                  <span key={track} className="lp-track-item">
+                    {track}
                   </span>
                 ))}
               </div>
             </div>
 
-            <Link
-              href={primaryHref}
-              style={{
-                padding: "14px 28px",
-                borderRadius: "12px",
-                background: "#F8FAFC",
-                color: "#000000",
-                fontSize: "15px",
-                fontWeight: 700,
-                textDecoration: "none",
-                whiteSpace: "nowrap",
-                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5)",
-              }}
-            >
-              {isSignedIn ? "Go to My Dashboard →" : "Sign In with Google →"}
+            <Link href={primaryHref} className="lp-btn-primary lp-btn-lg">
+              <span>{isSignedIn ? "Go to dashboard" : "Sign in with Google"}</span>
+              <ArrowRightIcon />
             </Link>
           </div>
         </section>
       </main>
 
-      {/* ── Footer ── */}
-      <footer
-        style={{
-          borderTop: `1px solid ${colors.border}`,
-          padding: "28px 24px",
-          textAlign: "center",
-          fontSize: "13px",
-          color: colors.textMuted,
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
-        <div style={{ maxWidth: "1160px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-          <span>Nexus · Adaptive AI Skill Mastery Platform</span>
-          <span>Built with Next.js, LangGraph &amp; Supabase</span>
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <span>Nexus</span>
+          <span>Adaptive technical skill progression</span>
         </div>
       </footer>
 
       <style>{`
-        @media (max-width: 680px) {
-          .landing-nav-links { display: none !important; }
+        .lp-root {
+          min-height: 100vh;
+          background: #000000;
+          color: #F8FAFC;
+          font-family: ${typography.fontBody};
+        }
+
+        .lp-header {
+          position: sticky;
+          top: 0;
+          z-index: 40;
+          background: rgba(0, 0, 0, 0.88);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .lp-header-inner {
+          max-width: 1120px;
+          margin: 0 auto;
+          height: 64px;
+          padding: 0 24px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+        }
+
+        .lp-brand {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          text-decoration: none;
+          min-height: 40px;
+        }
+
+        .lp-brand-mark {
+          width: 30px;
+          height: 30px;
+          border-radius: 7px;
+          background: #141418;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12);
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .lp-brand-name {
+          font-family: ${typography.fontDisplay};
+          font-size: 18px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: #F8FAFC;
+        }
+
+        .lp-nav {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .lp-nav-link {
+          font-size: 14px;
+          color: #94A3B8;
+          text-decoration: none;
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          transition-property: color;
+          transition-duration: 150ms;
+          transition-timing-function: ease-out;
+        }
+
+        .lp-nav-link:hover {
+          color: #F8FAFC;
+        }
+
+        .lp-header-actions {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .lp-btn-ghost {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 40px;
+          padding: 0 14px;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          color: #94A3B8;
+          text-decoration: none;
+          transition-property: color, background-color, transform;
+          transition-duration: 150ms;
+          transition-timing-function: ease-out;
+        }
+
+        .lp-btn-ghost:hover {
+          color: #F8FAFC;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .lp-btn-ghost:active {
+          transform: scale(0.96);
+        }
+
+        .lp-btn-primary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          background: #F8FAFC;
+          color: #09090B;
+          border-radius: 10px;
+          font-weight: 600;
+          text-decoration: none;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.14);
+          transition-property: opacity, transform, box-shadow;
+          transition-duration: 150ms;
+          transition-timing-function: ease-out;
+          white-space: nowrap;
+        }
+
+        .lp-btn-primary:hover {
+          opacity: 0.92;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+        }
+
+        .lp-btn-primary:active {
+          transform: scale(0.96);
+        }
+
+        /* Optical alignment: icon-side padding = text-side padding - 2px */
+        .lp-btn-sm {
+          min-height: 40px;
+          padding: 0 12px 0 14px;
+          font-size: 13px;
+        }
+
+        .lp-btn-lg {
+          min-height: 46px;
+          padding: 0 18px 0 20px;
+          font-size: 15px;
+        }
+
+        .lp-btn-secondary {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 46px;
+          padding: 0 20px;
+          border-radius: 10px;
+          background: #0B0C10;
+          color: #E2E8F0;
+          font-size: 15px;
+          font-weight: 500;
+          text-decoration: none;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+          transition-property: background-color, box-shadow, transform;
+          transition-duration: 150ms;
+          transition-timing-function: ease-out;
+          white-space: nowrap;
+        }
+
+        .lp-btn-secondary:hover {
+          background: #12141B;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+        }
+
+        .lp-btn-secondary:active {
+          transform: scale(0.96);
+        }
+
+        .lp-main {
+          max-width: 1120px;
+          margin: 0 auto;
+          padding: 0 24px;
+        }
+
+        .lp-hero {
+          padding: 72px 0 64px;
+          display: grid;
+          grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+          gap: 48px;
+          align-items: center;
+        }
+
+        .lp-eyebrow {
+          font-family: ${typography.fontMono};
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #64748B;
+          margin: 0 0 14px 0;
+        }
+
+        .lp-h1 {
+          font-family: ${typography.fontDisplay};
+          font-size: clamp(2.1rem, 4vw, 3rem);
+          font-weight: 700;
+          line-height: 1.12;
+          letter-spacing: -0.03em;
+          color: #F8FAFC;
+          margin: 0 0 18px 0;
+          text-wrap: balance;
+        }
+
+        .lp-lead {
+          font-size: 16px;
+          line-height: 1.65;
+          color: #94A3B8;
+          margin: 0 0 28px 0;
+          max-width: 500px;
+          text-wrap: pretty;
+        }
+
+        .lp-cta-row {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        /* Concentric outer container: 16px radius + 8px padding -> 8px inner items */
+        .lp-specimen {
+          background: #090A0D;
+          border-radius: 16px;
+          padding: 8px;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09);
+        }
+
+        .lp-tab-list {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 4px;
+          margin-bottom: 8px;
+        }
+
+        .lp-tab {
+          min-height: 40px;
+          border: none;
+          border-radius: 8px;
+          background: transparent;
+          color: #94A3B8;
+          font-size: 13px;
+          font-weight: 500;
+          cursor: pointer;
+          transition-property: background-color, color, transform;
+          transition-duration: 150ms;
+          transition-timing-function: ease-out;
+        }
+
+        .lp-tab:hover {
+          color: #F8FAFC;
+          background: rgba(255, 255, 255, 0.04);
+        }
+
+        .lp-tab:active {
+          transform: scale(0.96);
+        }
+
+        .lp-tab--active {
+          background: #14161D;
+          color: #F8FAFC;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .lp-specimen-panel {
+          background: #0D0E13;
+          border-radius: 8px;
+          padding: 20px;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+        }
+
+        .lp-specimen-meta {
+          font-family: ${typography.fontMono};
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: 0.06em;
+          color: #3B82F6;
+          margin-bottom: 8px;
+        }
+
+        .lp-specimen-title {
+          font-family: ${typography.fontDisplay};
+          font-size: 17px;
+          font-weight: 600;
+          color: #F8FAFC;
+          margin: 0 0 8px 0;
+          text-wrap: balance;
+        }
+
+        .lp-specimen-body {
+          font-size: 13.5px;
+          line-height: 1.6;
+          color: #94A3B8;
+          margin: 0 0 16px 0;
+          text-wrap: pretty;
+        }
+
+        .lp-code {
+          margin: 0 0 16px 0;
+          padding: 12px 14px;
+          border-radius: 6px;
+          background: #050507;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+          font-family: ${typography.fontMono};
+          font-size: 12px;
+          line-height: 1.55;
+          color: #CBD5E1;
+          overflow-x: auto;
+        }
+
+        .lp-metrics-row {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 8px;
+          padding-top: 14px;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .lp-metric-cell {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .lp-metric-val {
+          font-size: 15px;
+          font-weight: 600;
+          color: #F8FAFC;
+        }
+
+        .lp-metric-lbl {
+          font-size: 11px;
+          color: #64748B;
+        }
+
+        .lp-section {
+          padding: 56px 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .lp-section--last {
+          padding-bottom: 80px;
+        }
+
+        .lp-section-head {
+          margin-bottom: 32px;
+        }
+
+        .lp-h2 {
+          font-family: ${typography.fontDisplay};
+          font-size: clamp(1.5rem, 2.8vw, 2rem);
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          color: #F8FAFC;
+          margin: 0;
+          text-wrap: balance;
+        }
+
+        .lp-arch-list {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .lp-arch-row {
+          display: grid;
+          grid-template-columns: 56px minmax(0, 0.9fr) minmax(0, 1.3fr);
+          gap: 24px;
+          padding: 24px 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          align-items: baseline;
+        }
+
+        .lp-arch-num {
+          font-family: ${typography.fontMono};
+          font-size: 13px;
+          font-weight: 600;
+          color: #64748B;
+        }
+
+        .lp-arch-title {
+          font-family: ${typography.fontDisplay};
+          font-size: 16px;
+          font-weight: 600;
+          color: #F8FAFC;
+          margin: 0;
+          text-wrap: balance;
+        }
+
+        .lp-arch-detail {
+          font-size: 14px;
+          line-height: 1.65;
+          color: #94A3B8;
+          margin: 0;
+          text-wrap: pretty;
+        }
+
+        .lp-closing {
+          background: #090A0D;
+          border-radius: 16px;
+          padding: 32px;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          flex-wrap: wrap;
+        }
+
+        .lp-closing-copy {
+          max-width: 580px;
+        }
+
+        .lp-closing-sub {
+          font-size: 14px;
+          line-height: 1.6;
+          color: #94A3B8;
+          margin: 8px 0 18px 0;
+          text-wrap: pretty;
+        }
+
+        .lp-track-list {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .lp-track-item {
+          font-size: 12px;
+          font-weight: 500;
+          color: #CBD5E1;
+          padding: 5px 11px;
+          border-radius: 6px;
+          background: #111319;
+          box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.07);
+        }
+
+        .lp-footer {
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 24px;
+        }
+
+        .lp-footer-inner {
+          max-width: 1120px;
+          margin: 0 auto;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          font-size: 13px;
+          color: #64748B;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+
+        /* Staggered subtle entrance (100ms apart) */
+        .lp-stagger-1,
+        .lp-stagger-2,
+        .lp-stagger-3,
+        .lp-stagger-4 {
+          opacity: 0;
+          transform: translateY(10px);
+          filter: blur(4px);
+          animation: lpFadeUp 360ms ease-out forwards;
+        }
+        .lp-stagger-1 { animation-delay: 0ms; }
+        .lp-stagger-2 { animation-delay: 90ms; }
+        .lp-stagger-3 { animation-delay: 180ms; }
+        .lp-stagger-4 { animation-delay: 270ms; }
+
+        @keyframes lpFadeUp {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+          }
+        }
+
+        @media (max-width: 860px) {
+          .lp-hero {
+            grid-template-columns: 1fr;
+            padding: 48px 0 40px;
+          }
+          .lp-arch-row {
+            grid-template-columns: 1fr;
+            gap: 8px;
+          }
+        }
+
+        @media (max-width: 600px) {
+          .lp-nav {
+            display: none;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .lp-stagger-1,
+          .lp-stagger-2,
+          .lp-stagger-3,
+          .lp-stagger-4 {
+            animation: none;
+            opacity: 1;
+            transform: none;
+            filter: none;
+          }
         }
       `}</style>
     </div>
+  );
+}
+
+function ArrowRightIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3.5 8h9" />
+      <path d="M8.5 4l4 4-4 4" />
+    </svg>
   );
 }

@@ -17,11 +17,11 @@ interface ProgressBarProps {
   style?:      React.CSSProperties;
 }
 
-const gradients = {
-  default: "linear-gradient(90deg, #2563EB 0%, #3B82F6 100%)",
-  success: "linear-gradient(90deg, #059669 0%, #10B981 100%)",
-  warn:    "linear-gradient(90deg, #D97706 0%, #F59E0B 100%)",
-  danger:  "linear-gradient(90deg, #DC2626 0%, #EF4444 100%)",
+const fills = {
+  default: "#3B82F6",
+  success: "#10B981",
+  warn:    "#F59E0B",
+  danger:  "#EF4444",
 };
 
 const heights = { xs: 3, sm: 5, md: 8, lg: 12 };
@@ -50,19 +50,20 @@ export function ProgressBar({ value, max = 100, variant = "default", size = "sm"
       {(label || showValue) && (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
           {label && <span style={{ fontFamily: "var(--font-body)", fontSize: "0.8125rem", fontWeight: 500, color: "var(--color-text-secondary)" }}>{label}</span>}
-          {showValue && <span style={{ fontFamily: "var(--font-mono)", fontSize: "0.75rem", color: "var(--color-text-secondary)", fontWeight: 600 }}>{Math.round(pct)}%</span>}
+          {showValue && <span style={{ fontFamily: "var(--font-mono)", fontVariantNumeric: "tabular-nums", fontSize: "0.75rem", color: "var(--color-text-secondary)", fontWeight: 600 }}>{Math.round(pct)}%</span>}
         </div>
       )}
       <div style={{ width: "100%", height, borderRadius: "var(--radius-full)", background: "var(--color-surface-raised)", overflow: "hidden", position: "relative" }}>
         <div style={{
           height: "100%", width: `${displayed}%`, borderRadius: "var(--radius-full)",
           background: striped
-            ? `repeating-linear-gradient(60deg, transparent, transparent 8px, rgba(255,255,255,0.08) 8px, rgba(255,255,255,0.08) 16px), ${gradients[variant]}`
-            : gradients[variant],
+            ? `repeating-linear-gradient(60deg, transparent, transparent 8px, rgba(255,255,255,0.08) 8px, rgba(255,255,255,0.08) 16px), ${fills[variant]}`
+            : fills[variant],
           backgroundSize: striped ? "24px 100%" : "auto",
           animation: striped ? "nexus-stripe 1s linear infinite" : "none",
-          transition: animated ? "width 0.7s cubic-bezier(0.22, 1, 0.36, 1)" : "none",
-          boxShadow: pct > 0 ? "0 0 10px rgba(59, 130, 246, 0.4)" : "none",
+          transitionProperty: animated ? "width" : "none",
+          transitionDuration: animated ? "500ms" : "0ms",
+          transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
         }} />
       </div>
     </div>

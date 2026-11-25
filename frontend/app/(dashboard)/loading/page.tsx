@@ -70,17 +70,24 @@ function LoadingContent() {
             display: "inline-flex",
             alignItems: "center",
             justifyContent: "center",
-            width: 56,
-            height: 56,
+            width: 48,
+            height: 48,
             borderRadius: "50%",
-            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(139, 92, 246, 0.2) 100%)",
-            border: "1.5px solid rgba(59, 130, 246, 0.4)",
+            background: "#0D0E13",
+            boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.1)",
             marginBottom: 16,
-            boxShadow: "0 0 24px rgba(59, 130, 246, 0.25)",
-            animation: "pulse 2s infinite ease-in-out",
           }}
         >
-          <span style={{ fontSize: 24 }}>✨</span>
+          <div
+            style={{
+              width: 20,
+              height: 20,
+              borderRadius: "50%",
+              border: "2px solid rgba(255, 255, 255, 0.14)",
+              borderTopColor: "#F8FAFC",
+              animation: "spin 0.8s linear infinite",
+            }}
+          />
         </div>
 
         <h1
@@ -124,16 +131,16 @@ function LoadingContent() {
                 padding: "14px 16px",
                 borderRadius: "12px",
                 background: isCurrent
-                  ? "rgba(59, 130, 246, 0.08)"
-                  : "var(--color-surface, #090A0F)",
-                border: `1px solid ${
-                  isCurrent
-                    ? "var(--color-brand, #3B82F6)"
-                    : isDone
-                    ? "rgba(16, 185, 129, 0.3)"
-                    : "var(--color-border, #1E2330)"
-                }`,
-                transition: "all 0.3s ease",
+                  ? "#12151C"
+                  : "var(--color-surface, #090A0D)",
+                boxShadow: isCurrent
+                  ? "0 0 0 1px rgba(59, 130, 246, 0.45)"
+                  : isDone
+                  ? "0 0 0 1px rgba(16, 185, 129, 0.35)"
+                  : "0 0 0 1px rgba(255, 255, 255, 0.08)",
+                transitionProperty: "background-color, box-shadow",
+                transitionDuration: "200ms",
+                transitionTimingFunction: "ease-out",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
@@ -144,6 +151,7 @@ function LoadingContent() {
                     borderRadius: "50%",
                     fontSize: 11,
                     fontWeight: 700,
+                    fontVariantNumeric: "tabular-nums",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -162,7 +170,7 @@ function LoadingContent() {
                     fontSize: 13,
                     fontWeight: 600,
                     color: isCurrent
-                      ? "var(--color-brand, #3B82F6)"
+                      ? "var(--color-text-primary, #F8FAFC)"
                       : isDone
                       ? "var(--color-text-primary, #F8FAFC)"
                       : "var(--color-text-muted, #64748B)",
@@ -179,44 +187,37 @@ function LoadingContent() {
         })}
       </div>
 
-      {/* Stream Terminal Window */}
+      {/* Stream Output Card */}
       {(phase === "streaming" || phase === "complete" || tokens.length > 0) && (
         <div
           style={{
-            background: "#05060A",
-            border: "1px solid var(--color-border, #1E2330)",
+            background: "#090A0D",
+            boxShadow: "0 0 0 1px rgba(255, 255, 255, 0.08)",
             borderRadius: "14px",
             overflow: "hidden",
-            boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
           }}
         >
-          {/* Terminal Window Bar */}
           <div
             style={{
               padding: "10px 16px",
-              background: "var(--color-surface, #090A0F)",
-              borderBottom: "1px solid var(--color-border, #1E2330)",
+              background: "#0D0E13",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#EF4444" }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#F59E0B" }} />
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10B981" }} />
-            </div>
             <span
               style={{
                 fontSize: 11,
                 fontFamily: "var(--font-mono, monospace)",
                 color: "var(--color-text-muted, #64748B)",
                 letterSpacing: "0.05em",
+                textTransform: "uppercase",
               }}
             >
-              nexus-curriculum-engine // live-stream
+              Curriculum outline
             </span>
-            <div style={{ width: 36 }} />
           </div>
 
           {/* Formatted Stream Content */}
@@ -288,9 +289,8 @@ function LoadingContent() {
       )}
 
       <style>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 0.9; }
-          50% { transform: scale(1.06); opacity: 1; }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
         @keyframes blink {
           0%, 100% { opacity: 1; }

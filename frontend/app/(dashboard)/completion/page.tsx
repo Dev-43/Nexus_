@@ -75,17 +75,16 @@ function CompletionContent() {
         {/* Confetti & Trophy Hero */}
         <div
           style={{
-            width: '88px',
-            height: '88px',
+            width: '72px',
+            height: '72px',
             borderRadius: '50%',
-            background: 'rgba(59, 130, 246, 0.12)',
-            border: '2px solid #3B82F6',
+            background: '#12151C',
+            boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.12)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '44px',
+            fontSize: '34px',
             margin: '0 auto 24px',
-            boxShadow: '0 0 35px rgba(59, 130, 246, 0.3)',
           }}
         >
           🎓

@@ -49,30 +49,33 @@
 
 .skillCard {
   position: relative;
-  background: var(--color-surface, #090A0F);
-  border: 1px solid var(--color-border, #1E2330);
+  background: var(--color-surface, #090A0D);
+  border: none;
   border-radius: 12px;
   padding: 1.25rem 1rem 1rem;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, transform 0.1s, box-shadow 0.15s;
+  transition-property: background-color, transform, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .skillCard:hover {
-  border-color: var(--color-accent, #3B82F6);
-  background: #121520;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+  background: #12151C;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.16);
+}
+
+.skillCard:active {
+  transform: scale(0.96);
 }
 
 .skillCardSelected {
-  border-color: var(--color-accent, #3B82F6) !important;
-  background: rgba(59, 130, 246, 0.12) !important;
-  box-shadow: 0 0 0 1px #3B82F6 !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+  box-shadow: 0 0 0 1.5px #3B82F6 !important;
 }
 
 .skillIcon {
