@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       // not broken. A hard failure here would lock people out of login.
       if (statsError) {
         console.error('Failed to check personality quiz status during login:', statsError);
-        return NextResponse.redirect(new URL('/', requestUrl.origin));
+        return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
       }
 
       const hasCompletedQuiz = !!statsRow?.personality_profile;
@@ -60,10 +60,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.redirect(new URL('/', requestUrl.origin));
+    return NextResponse.redirect(new URL('/dashboard', requestUrl.origin));
   }
 
   // No code present — something went wrong with the OAuth flow itself.
   // Send back to login rather than silently redirecting into the app.
-  return NextResponse.redirect(new URL('/', requestUrl.origin));
+  return NextResponse.redirect(new URL('/login', requestUrl.origin));
 }

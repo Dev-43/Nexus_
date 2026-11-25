@@ -99,7 +99,7 @@ export default function OnboardingPage() {
       if (!user) {
         // No session — shouldn't normally land here, authGate should
         // have caught this, but fail safe rather than crash.
-        router.push("/");
+        router.push("/login");
         return;
       }
       setUserId(user.id);

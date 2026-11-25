@@ -72,7 +72,7 @@ export default function CompletionOverlay({
 
   const handleDashboard = () => {
     onDismiss();
-    router.push("/");
+    router.push("/dashboard");
   };
 
   const levelLabel =

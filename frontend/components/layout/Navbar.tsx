@@ -42,7 +42,7 @@ export default function Navbar() {
     }
   }
 
-  const isHome = pathname === "/";
+  const isHome = pathname === "/dashboard";
   const isLeaderboard = pathname === "/leaderboard";
 
   return (
@@ -73,7 +73,7 @@ export default function Navbar() {
         {/* Left: Brand & Navigation Links */}
         <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
           <Link
-            href="/"
+            href={userEmail ? "/dashboard" : "/"}
             style={{
               display: "flex",
               alignItems: "center",
@@ -130,7 +130,7 @@ export default function Navbar() {
           {/* Navigation links */}
           <nav style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <Link
-              href="/"
+              href="/dashboard"
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -297,7 +297,7 @@ export default function Navbar() {
                     </div>
 
                     <Link
-                      href="/"
+                      href="/dashboard"
                       onClick={() => setDropdownOpen(false)}
                       style={{
                         padding: "8px 10px",

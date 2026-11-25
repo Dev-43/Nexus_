@@ -252,7 +252,7 @@ function CompletionContent() {
 
         {/* Actions */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <Link href="/">
+          <Link href="/dashboard">
             <Button variant="primary" style={{ minWidth: '180px' }}>
               Return to Dashboard
             </Button>
